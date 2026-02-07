@@ -9,6 +9,7 @@ import { spawn, execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import treeKill from 'tree-kill';
 import type { CodexEventParams } from '@/common/codex/types';
 import { globalErrorService, fromNetworkError } from '../core/ErrorService';
 import { JSONRPC_VERSION } from '@/types/acpTypes';
@@ -290,7 +291,16 @@ export class CodexConnection {
 
   stop(): Promise<void> {
     if (this.child) {
-      this.child.kill();
+      const pid = this.child.pid;
+      if (pid) {
+        treeKill(pid, 'SIGTERM', (err) => {
+          if (err) {
+            console.error(`[Codex] Failed to kill process tree (pid: ${pid}):`, err.message);
+          }
+        });
+      } else {
+        this.child.kill();
+      }
       this.child = null;
     }
     // Reject all pending

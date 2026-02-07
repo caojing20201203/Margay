@@ -564,11 +564,15 @@ export interface ToolCallUpdate extends BaseSessionUpdate {
 }
 
 // 工具调用状态更新 / Tool call update (status change)
+// ACP sends two tool_call_update messages:
+//   1st: only _meta.claudeCode.toolResponse (no status, no content)
+//   2nd: status + content + rawOutput (final result)
 export interface ToolCallUpdateStatus extends BaseSessionUpdate {
   update: {
     sessionUpdate: 'tool_call_update';
     toolCallId: string;
-    status: 'completed' | 'failed';
+    status?: 'completed' | 'failed';
+    rawOutput?: string;
     content?: Array<{
       type: 'content';
       content: {
@@ -576,6 +580,17 @@ export interface ToolCallUpdateStatus extends BaseSessionUpdate {
         text: string;
       };
     }>;
+    _meta?: {
+      claudeCode?: {
+        toolResponse?: {
+          stdout?: string;
+          stderr?: string;
+          interrupted?: boolean;
+          isImage?: boolean;
+        };
+        toolName?: string;
+      };
+    };
   };
 }
 

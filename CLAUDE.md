@@ -177,6 +177,13 @@ Do not add `🤖 Generated with Claude` or similar signatures to commits.
 - `CronService`: Task scheduling engine
 - `CronBusyGuard`: Prevents concurrent execution
 
+### ACP Agent Pipeline
+
+- **AcpConnection** (`src/agent/acp/AcpConnection.ts`): Manages child process lifecycle, stderr ring buffer (10 lines / 2000 chars), and shell environment PATH loading
+- **AcpAdapter** (`src/agent/acp/AcpAdapter.ts`): Transforms ACP JSON-RPC messages into UI message types; merges duplicate tool_call updates by toolCallId
+- **Message rendering**: `acp_tool_call` messages are grouped into "View Steps" collapsible via `MessageToolGroupSummary.tsx` (not rendered individually via `MessageAcpToolCall.tsx`)
+- **Shell utilities** (`src/common/terminalUtils.ts`): Cross-platform terminal command builder with per-platform escaping (AppleScript/cmd/bash); used by `shellBridge.openInTerminal` IPC provider
+
 ## Supported AI Agents
 
 - Claude (via MCP)
@@ -188,7 +195,7 @@ Do not add `🤖 Generated with Claude` or similar signatures to commits.
 
 ## Internationalization
 
-Supported languages: English (en-US), Chinese Simplified (zh-CN), Chinese Traditional (zh-TW), Japanese (ja-JP), Korean (ko-KR)
+Supported languages: English (en-US), Chinese Simplified (zh-CN), Chinese Traditional (zh-TW), Japanese (ja-JP), Korean (ko-KR), Turkish (tr-TR)
 
 Translation files: `src/renderer/i18n/locales/*.json`
 

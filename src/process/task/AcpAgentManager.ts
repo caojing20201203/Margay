@@ -329,6 +329,21 @@ class AcpAgentManager extends BaseAgentManager<AcpAgentManagerData, AcpPermissio
   }
 
   /**
+   * Override kill() to ensure ACP CLI process tree is terminated.
+   * WorkerManage.kill() calls ForkTask.kill() which only kills the Electron utilityProcess,
+   * but AcpAgent spawns its own child processes via AcpConnection that need tree-kill cleanup.
+   */
+  kill() {
+    try {
+      this.agent?.stop?.().catch((error) => {
+        console.error('[AcpAgentManager] Failed to stop ACP agent during kill:', error);
+      });
+    } finally {
+      super.kill();
+    }
+  }
+
+  /**
    * Save ACP session ID to database for resume support.
    * 保存 ACP session ID 到数据库以支持会话恢复。
    */

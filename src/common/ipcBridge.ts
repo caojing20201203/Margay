@@ -18,6 +18,7 @@ export const shell = {
   openFile: bridge.buildProvider<void, string>('open-file'), // 使用系统默认程序打开文件
   showItemInFolder: bridge.buildProvider<void, string>('show-item-in-folder'), // 打开文件夹
   openExternal: bridge.buildProvider<void, string>('open-external'), // 使用系统默认程序打开外部链接
+  openInTerminal: bridge.buildProvider<void, { command: string; cwd?: string }>('shell-open-in-terminal'), // 在系统终端中运行命令
 };
 
 //通用会话能力

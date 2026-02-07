@@ -176,6 +176,27 @@ export class AcpAdapter {
   private createOrUpdateAcpToolCall(update: ToolCallUpdate): IMessageAcpToolCall | null {
     const toolCallId = update.update.toolCallId;
 
+    // Check if we already have this tool call (ACP sends multiple tool_call events for the same toolCallId)
+    const existing = this.activeToolCalls.get(toolCallId);
+    if (existing) {
+      // Merge new data into existing entry instead of creating a duplicate
+      const mergedContent: ToolCallUpdate = {
+        ...existing.content,
+        ...update,
+        update: {
+          ...existing.content.update,
+          ...update.update,
+        },
+      };
+      const updatedMessage: IMessageAcpToolCall = {
+        ...existing,
+        content: mergedContent,
+        createdAt: Date.now(),
+      };
+      this.activeToolCalls.set(toolCallId, updatedMessage);
+      return updatedMessage;
+    }
+
     // 使用 toolCallId 作为 msg_id，确保同一个工具调用的消息可以被合并
     const baseMessage = {
       id: uuid(),
@@ -211,12 +232,13 @@ export class AcpAdapter {
     }
 
     // Update the ToolCallUpdate content with new status and content
+    // Only overwrite fields that are actually present in the update to avoid undefined overwrites
     const updatedContent: ToolCallUpdate = {
       ...existingMessage.content,
       update: {
         ...existingMessage.content.update,
-        status: toolCallData.status,
-        content: toolCallData.content || existingMessage.content.update.content,
+        ...(toolCallData.status !== undefined && { status: toolCallData.status }),
+        ...(toolCallData.content !== undefined && { content: toolCallData.content }),
       },
     };
 

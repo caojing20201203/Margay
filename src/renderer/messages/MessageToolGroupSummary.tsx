@@ -1,7 +1,8 @@
 import type { BadgeProps } from '@arco-design/web-react';
-import { Badge } from '@arco-design/web-react';
-import { IconDown, IconRight } from '@arco-design/web-react/icon';
-import React, { useMemo, useState } from 'react';
+import { Badge, Button, Message } from '@arco-design/web-react';
+import { IconCopy, IconDown, IconRight } from '@arco-design/web-react/icon';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { IMessageAcpToolCall, IMessageToolGroup } from '../../common/chatLib';
 import './MessageToolGroupSummary.css';
 
@@ -25,13 +26,35 @@ const ToolGroupMapper = (m: IMessageToolGroup) => {
 const ToolAcpMapper = (message: IMessageAcpToolCall) => {
   const update = message.content.update;
   if (!update) return;
+  const command = update.kind === 'execute' && update.rawInput?.command ? String(update.rawInput.command) : undefined;
   return {
     key: update.toolCallId,
     name: update.rawInput?.description || update.title,
     desc: update.rawInput?.command || update.kind,
     status: update.status === 'completed' ? 'success' : update.status === 'failed' ? 'error' : ('default' as BadgeProps['status']),
+    command,
   };
 };
+const CopyCommandButton: React.FC<{ command: string }> = ({ command }) => {
+  const { t } = useTranslation();
+
+  const handleClick = useCallback(
+    (e: Event) => {
+      e.stopPropagation();
+      void navigator.clipboard.writeText(command).then(() => {
+        Message.success(t('messages.copySuccess'));
+      });
+    },
+    [command, t]
+  );
+
+  return (
+    <Button type='text' size='mini' icon={<IconCopy />} onClick={handleClick}>
+      {t('messages.copyCommand')}
+    </Button>
+  );
+};
+
 const MessageToolGroupSummary: React.FC<{ messages: Array<IMessageToolGroup | IMessageAcpToolCall> }> = ({ messages }) => {
   const [showMore, setShowMore] = useState(() => {
     if (!messages.length) return false;
@@ -56,9 +79,10 @@ const MessageToolGroupSummary: React.FC<{ messages: Array<IMessageToolGroup | IM
         <div className='p-l-20px flex flex-col gap-8px pt-8px'>
           {tools.map((item) => {
             return (
-              <div key={item.key} className='flex flex-row color-#86909C gap-12px'>
+              <div key={item.key} className='flex flex-row items-center color-#86909C gap-12px'>
                 <Badge status={item.status} className={item.status === 'processing' ? 'badge-breathing' : ''}></Badge>
                 <span>{`${item.name}(${item.desc})`} </span>
+                {'command' in item && item.command && <CopyCommandButton command={item.command} />}
               </div>
             );
           })}

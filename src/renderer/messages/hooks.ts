@@ -88,7 +88,9 @@ function composeMessageWithIndex(message: TMessage, list: TMessage[], index: Mes
         return newList;
       }
     }
-    // 未找到，添加新消息
+    // 未找到，添加新消息，同时更新索引防止同批次重复
+    // Not found, add new message and update index to prevent same-batch duplicates
+    index.callIdIndex.set(message.content.callId, list.length);
     list.push(message);
     return list;
   }
@@ -106,6 +108,7 @@ function composeMessageWithIndex(message: TMessage, list: TMessage[], index: Mes
         return newList;
       }
     }
+    index.toolCallIdIndex.set(message.content.toolCallId, list.length);
     list.push(message);
     return list;
   }
@@ -123,6 +126,7 @@ function composeMessageWithIndex(message: TMessage, list: TMessage[], index: Mes
         return newList;
       }
     }
+    index.toolCallIdIndex.set(message.content.update.toolCallId, list.length);
     list.push(message);
     return list;
   }

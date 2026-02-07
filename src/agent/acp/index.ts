@@ -690,12 +690,15 @@ export class AcpAgent {
    * Handle unexpected disconnect from ACP backend
    * Notify frontend and clean up internal state
    */
-  private handleDisconnect(error: { code: number | null; signal: NodeJS.Signals | null }): void {
+  private handleDisconnect(error: { code: number | null; signal: NodeJS.Signals | null; stderr?: string }): void {
     // 1. Emit disconnected status to frontend
     this.emitStatusMessage('disconnected');
 
-    // 2. Emit error message with helpful information
-    const errorMsg = `${this.extra.backend} process disconnected unexpectedly ` + `(code: ${error.code}, signal: ${error.signal}). ` + `Please try sending a new message to reconnect.`;
+    // 2. Emit error message with helpful information (include stderr context if available)
+    let errorMsg = `${this.extra.backend} process disconnected unexpectedly ` + `(code: ${error.code}, signal: ${error.signal}). ` + `Please try sending a new message to reconnect.`;
+    if (error.stderr) {
+      errorMsg += `\n\nRecent stderr output:\n${error.stderr}`;
+    }
     this.emitErrorMessage(errorMsg);
 
     // 3. Emit finish signal to reset UI loading state

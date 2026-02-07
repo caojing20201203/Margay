@@ -5,9 +5,11 @@
  */
 
 import type { IMessageAcpToolCall } from '@/common/chatLib';
-import { Card, Tag } from '@arco-design/web-react';
+import { Button, Card, Message, Tag } from '@arco-design/web-react';
+import { IconCopy } from '@arco-design/web-react/icon';
 import { createTwoFilesPatch } from 'diff';
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Diff2Html from '../../components/Diff2Html';
 import MarkdownView from '../../components/Markdown';
 
@@ -57,6 +59,22 @@ const ContentView: React.FC<{ content: IMessageAcpToolCall['content']['update'][
   return null;
 };
 
+const CopyCommandButton: React.FC<{ command: string }> = ({ command }) => {
+  const { t } = useTranslation();
+
+  const handleClick = useCallback(() => {
+    void navigator.clipboard.writeText(command).then(() => {
+      Message.success(t('messages.copySuccess'));
+    });
+  }, [command, t]);
+
+  return (
+    <Button type='outline' size='mini' icon={<IconCopy />} onClick={handleClick}>
+      {t('messages.copyCommand')}
+    </Button>
+  );
+};
+
 const MessageAcpToolCall: React.FC<{ message: IMessageAcpToolCall }> = ({ message }) => {
   const { content } = message;
   if (!content?.update) {
@@ -78,6 +96,8 @@ const MessageAcpToolCall: React.FC<{ message: IMessageAcpToolCall }> = ({ messag
     }
   };
 
+  const executeCommand = kind === 'execute' && rawInput?.command ? String(rawInput.command) : null;
+
   return (
     <Card className='w-full mb-2' size='small' bordered>
       <div className='flex items-start gap-3'>
@@ -85,6 +105,7 @@ const MessageAcpToolCall: React.FC<{ message: IMessageAcpToolCall }> = ({ messag
           <div className='flex items-center gap-2 mb-2'>
             <span className='font-medium text-t-primary'>{title || getKindDisplayName(kind)}</span>
             <StatusTag status={status} />
+            {executeCommand && <CopyCommandButton command={executeCommand} />}
           </div>
           {rawInput && <div className='text-sm'>{typeof rawInput === 'string' ? <MarkdownView>{`\`\`\`\n${rawInput}\n\`\`\``}</MarkdownView> : <pre className='bg-1 p-2 rounded text-xs overflow-x-auto'>{JSON.stringify(rawInput, null, 2)}</pre>}</div>}
           {diffContent && diffContent.length > 0 && (

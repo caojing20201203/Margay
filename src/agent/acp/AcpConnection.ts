@@ -11,6 +11,7 @@ import { execSync, spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
+import treeKill from 'tree-kill';
 
 /**
  * Environment variables to inherit from user's shell.
@@ -217,10 +218,24 @@ export class AcpConnection {
   public onEndTurn: () => void = () => {}; // Handler for end_turn messages
   public onFileOperation: (operation: { method: string; path: string; content?: string; sessionId: string }) => void = () => {};
   // Disconnect callback - called when child process exits unexpectedly during runtime
-  public onDisconnect: (error: { code: number | null; signal: NodeJS.Signals | null }) => void = () => {};
+  public onDisconnect: (error: { code: number | null; signal: NodeJS.Signals | null; stderr?: string }) => void = () => {};
 
   // Track if initial setup is complete (to distinguish startup errors from runtime exits)
   private isSetupComplete = false;
+
+  // Ring buffer for recent stderr lines (max 10 lines, used to provide context in error messages)
+  private static readonly STDERR_BUFFER_MAX_LINES = 10;
+  private static readonly STDERR_BUFFER_MAX_CHARS = 2000;
+  private stderrBuffer: string[] = [];
+
+  /** Get recent stderr output as a single string, truncated to max chars */
+  private getRecentStderr(): string {
+    const joined = this.stderrBuffer.join('\n');
+    if (joined.length > AcpConnection.STDERR_BUFFER_MAX_CHARS) {
+      return '...' + joined.slice(-AcpConnection.STDERR_BUFFER_MAX_CHARS);
+    }
+    return joined;
+  }
 
   // 通用的后端连接方法
   private async connectGenericBackend(backend: 'gemini' | 'qwen' | 'iflow' | 'droid' | 'goose' | 'auggie' | 'kimi' | 'opencode' | 'copilot' | 'qoder' | 'openclaw' | 'custom', cliPath: string, workingDir: string, acpArgs?: string[], customEnv?: Record<string, string>): Promise<void> {
@@ -302,8 +317,17 @@ export class AcpConnection {
   private async setupChildProcessHandlers(backend: string): Promise<void> {
     let spawnError: Error | null = null;
 
+    // Buffer stderr for error context (also keep console.error for dev debugging)
+    this.stderrBuffer = [];
     this.child.stderr?.on('data', (data) => {
-      console.error(`[ACP ${backend} STDERR]:`, data.toString());
+      const text = data.toString();
+      console.error(`[ACP ${backend} STDERR]:`, text);
+      const lines = text.split('\n').filter((l: string) => l.trim());
+      this.stderrBuffer.push(...lines);
+      // Keep only last N lines
+      if (this.stderrBuffer.length > AcpConnection.STDERR_BUFFER_MAX_LINES) {
+        this.stderrBuffer = this.stderrBuffer.slice(-AcpConnection.STDERR_BUFFER_MAX_LINES);
+      }
     });
 
     this.child.on('error', (error) => {
@@ -315,9 +339,11 @@ export class AcpConnection {
       console.error(`[ACP ${backend}] Process exited with code: ${code}, signal: ${signal}`);
 
       if (!this.isSetupComplete) {
-        // Startup phase - set error for initial check
+        // Startup phase - include stderr context in error
         if (code !== 0 && !spawnError) {
-          spawnError = new Error(`${backend} ACP process failed with exit code: ${code}`);
+          const stderr = this.getRecentStderr();
+          const msg = `${backend} ACP process failed with exit code: ${code}`;
+          spawnError = new Error(stderr ? `${msg}\n\nStderr:\n${stderr}` : msg);
         }
       } else {
         // Runtime phase - handle unexpected exit
@@ -328,14 +354,20 @@ export class AcpConnection {
     // Wait a bit for the process to start
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Check if process spawn failed
+    // Check if process spawn failed (augment with stderr context if available)
     if (spawnError) {
+      const stderr = this.getRecentStderr();
+      if (stderr && !spawnError.message.includes('Stderr:')) {
+        throw new Error(`${spawnError.message}\n\nStderr:\n${stderr}`);
+      }
       throw spawnError;
     }
 
     // Check if process is still running
     if (!this.child || this.child.killed) {
-      throw new Error(`${backend} ACP process failed to start or exited immediately`);
+      const stderr = this.getRecentStderr();
+      const msg = `${backend} ACP process failed to start or exited immediately`;
+      throw new Error(stderr ? `${msg}\n\nStderr:\n${stderr}` : msg);
     }
 
     // Handle messages from ACP server
@@ -350,7 +382,6 @@ export class AcpConnection {
         if (line.trim()) {
           try {
             const message = JSON.parse(line) as AcpMessage;
-            // console.log('AcpMessage==>', JSON.stringify(message));
             this.handleMessage(message);
           } catch (error) {
             // Ignore parsing errors for non-JSON messages
@@ -387,16 +418,20 @@ export class AcpConnection {
     }
     this.pendingRequests.clear();
 
-    // 2. Clear connection state
+    // 2. Capture stderr before clearing state
+    const stderr = this.getRecentStderr() || undefined;
+
+    // 3. Clear connection state
     this.sessionId = null;
     this.isInitialized = false;
     this.isSetupComplete = false;
     this.backend = null;
     this.initializeResponse = null;
     this.child = null;
+    this.stderrBuffer = [];
 
-    // 3. Notify AcpAgent about disconnect
-    this.onDisconnect({ code, signal });
+    // 4. Notify AcpAgent about disconnect (with stderr context)
+    this.onDisconnect({ code, signal, stderr });
   }
 
   private sendRequest<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T> {
@@ -842,7 +877,18 @@ export class AcpConnection {
 
   disconnect(): void {
     if (this.child) {
-      this.child.kill();
+      const pid = this.child.pid;
+      if (pid) {
+        // Kill entire process tree to prevent orphaned subprocesses
+        // (e.g., npm run dev spawned by CLI agents)
+        treeKill(pid, 'SIGTERM', (err) => {
+          if (err) {
+            console.error(`[ACP] Failed to kill process tree (pid: ${pid}):`, err.message);
+          }
+        });
+      } else {
+        this.child.kill();
+      }
       this.child = null;
     }
 

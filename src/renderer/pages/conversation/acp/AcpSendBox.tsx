@@ -31,6 +31,7 @@ const useAcpSendBoxDraft = getSendBoxDraftHook('acp', {
 
 const useAcpMessage = (conversation_id: string) => {
   const addOrUpdateMessage = useAddOrUpdateMessage();
+  const { t } = useTranslation();
   const [running, setRunning] = useState(false);
   const [thought, setThought] = useState<ThoughtData>({
     description: '',
@@ -112,13 +113,24 @@ const useAcpMessage = (conversation_id: string) => {
           addOrUpdateMessage(transformedMessage);
           break;
         case 'agent_status': {
-          // Update ACP/Agent status
+          // Update ACP/Agent status and show connection phase in ThoughtDisplay
           const agentData = message.data as {
             status?: 'connecting' | 'connected' | 'authenticated' | 'session_active' | 'disconnected' | 'error';
             backend?: string;
           };
           if (agentData?.status) {
             setAcpStatus(agentData.status);
+            // Show connection phase details in ThoughtDisplay
+            const agentName = agentData.backend || 'Agent';
+            if (agentData.status === 'connecting' || agentData.status === 'connected' || agentData.status === 'authenticated') {
+              throttledSetThought({
+                subject: agentName,
+                description: t(`acp.status.${agentData.status}`, { agent: agentName }),
+              });
+            } else if (agentData.status === 'session_active' || agentData.status === 'disconnected' || agentData.status === 'error') {
+              // Session ready or connection failed, clear connection status thought
+              setThought({ subject: '', description: '' });
+            }
             // Reset running state when authentication is complete
             if (['authenticated', 'session_active'].includes(agentData.status)) {
               setRunning(false);
@@ -143,7 +155,7 @@ const useAcpMessage = (conversation_id: string) => {
           break;
       }
     },
-    [conversation_id, addOrUpdateMessage, throttledSetThought, setThought, setRunning, setAiProcessing, setAcpStatus]
+    [conversation_id, addOrUpdateMessage, throttledSetThought, setThought, setRunning, setAiProcessing, setAcpStatus, t]
   );
 
   useEffect(() => {
