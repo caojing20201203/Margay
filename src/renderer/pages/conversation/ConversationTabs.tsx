@@ -4,15 +4,67 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { ipcBridge } from '@/common';
+import { ConfigStorage } from '@/common/storage';
+import type { AcpBackend } from '@/types/acpTypes';
+import ClaudeLogo from '@/renderer/assets/logos/claude.svg';
+import CodexLogo from '@/renderer/assets/logos/codex.svg';
+import GeminiLogo from '@/renderer/assets/logos/gemini.svg';
+import QwenLogo from '@/renderer/assets/logos/qwen.svg';
+import DroidLogo from '@/renderer/assets/logos/droid.svg';
+import IflowLogo from '@/renderer/assets/logos/iflow.svg';
+import GooseLogo from '@/renderer/assets/logos/goose.svg';
+import AuggieLogo from '@/renderer/assets/logos/auggie.svg';
+import KimiLogo from '@/renderer/assets/logos/kimi.svg';
+import OpenCodeLogo from '@/renderer/assets/logos/opencode.svg';
+import GitHubLogo from '@/renderer/assets/logos/github.svg';
+import QoderLogo from '@/renderer/assets/logos/qoder.png';
+import OpenClawLogo from '@/renderer/assets/logos/openclaw.svg';
 import { iconColors } from '@/renderer/theme/colors';
-import { Dropdown, Menu, Tooltip } from '@arco-design/web-react';
+import { emitter } from '@/renderer/utils/emitter';
+import { resolveDefaultModel } from '@/renderer/utils/modelResolver';
+import { updateWorkspaceTime } from '@/renderer/utils/workspaceHistory';
+import { Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
 import { Close, Plus } from '@icon-park/react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import useSWR from 'swr';
 import { useConversationTabs } from './context/ConversationTabsContext';
 
 const TAB_OVERFLOW_THRESHOLD = 10;
+
+/** Agent logo map — reused from guid */
+const AGENT_LOGO_MAP: Partial<Record<AcpBackend, string>> = {
+  claude: ClaudeLogo,
+  gemini: GeminiLogo,
+  qwen: QwenLogo,
+  codex: CodexLogo,
+  droid: DroidLogo,
+  iflow: IflowLogo,
+  goose: GooseLogo,
+  auggie: AuggieLogo,
+  kimi: KimiLogo,
+  opencode: OpenCodeLogo,
+  copilot: GitHubLogo,
+  qoder: QoderLogo,
+  openclaw: OpenClawLogo,
+};
+
+/** Resolve backend → conversation create type */
+function resolveConversationType(backend: AcpBackend): 'gemini' | 'codex' | 'acp' {
+  if (backend === 'gemini') return 'gemini';
+  if (backend === 'codex') return 'codex';
+  return 'acp';
+}
+
+/** Agent info for the inline selector */
+interface InlineSelectorAgent {
+  backend: AcpBackend;
+  name: string;
+  cliPath?: string;
+  customAgentId?: string;
+}
 
 interface TabFadeState {
   left: boolean;
@@ -27,11 +79,94 @@ interface TabFadeState {
  * Displays all open conversation tabs, supports switching, closing, and creating new conversations
  */
 const ConversationTabs: React.FC = () => {
-  const { openTabs, activeTabId, switchTab, closeTab, closeAllTabs, closeTabsToLeft, closeTabsToRight, closeOtherTabs } = useConversationTabs();
+  const { openTabs, activeTabId, switchTab, closeTab, openTab, closeAllTabs, closeTabsToLeft, closeTabsToRight, closeOtherTabs } = useConversationTabs();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const [tabFadeState, setTabFadeState] = useState<TabFadeState>({ left: false, right: false });
+
+  // Fetch available agents for the inline selector (already filtered by disabled backends)
+  const { data: availableAgents } = useSWR('acp.agents.available', async () => {
+    const result = await ipcBridge.acpConversation.getAvailableAgents.invoke();
+    if (result.success) {
+      // Filter out presets (full preset flow stays on /guid)
+      return result.data.filter((agent) => !agent.isPreset);
+    }
+    return [];
+  });
+
+  // Fetch disabled backends to respect BackendManagement settings for fallback Gemini
+  const { data: disabledBackends } = useSWR('acp.disabledBackends', () => ConfigStorage.get('acp.disabledBackends').then((v) => v || []));
+
+  // Build selector options: use getAvailableAgents response (respects disabled backends).
+  // If no agents detected but Gemini is not disabled, guarantee Gemini as fallback.
+  const selectorOptions = useMemo((): InlineSelectorAgent[] => {
+    const agents = availableAgents || [];
+    const disabled = disabledBackends || [];
+    const options: InlineSelectorAgent[] = agents.map((a) => ({
+      backend: a.backend,
+      name: a.name,
+      cliPath: a.cliPath,
+      customAgentId: a.customAgentId,
+    }));
+    // Guarantee Gemini if not already present AND not disabled (gemini-only env fallback)
+    if (!options.some((a) => a.backend === 'gemini') && !disabled.includes('gemini')) {
+      options.unshift({ backend: 'gemini', name: 'Gemini CLI' });
+    }
+    return options;
+  }, [availableAgents, disabledBackends]);
+
+  // Create inline conversation for the selected agent
+  const handleCreateInlineConversation = useCallback(
+    async (agent: InlineSelectorAgent) => {
+      const currentTab = openTabs.find((tab) => tab.id === activeTabId);
+      const workspace = currentTab?.workspace || '';
+
+      if (!workspace) {
+        Message.error(t('conversation.workspace.createNewConversation'));
+        return;
+      }
+
+      try {
+        const model = await resolveDefaultModel();
+        if (!model) {
+          Message.error('No model configured. Please configure a model in Settings.');
+          return;
+        }
+
+        const convType = resolveConversationType(agent.backend);
+        const conversation = await ipcBridge.conversation.create.invoke({
+          type: convType,
+          name: t('conversation.welcome.newConversation'),
+          model,
+          extra: {
+            workspace,
+            customWorkspace: true,
+            ...(convType === 'acp' && {
+              backend: agent.backend,
+              cliPath: agent.cliPath,
+              agentName: agent.name,
+              customAgentId: agent.customAgentId,
+            }),
+          },
+        });
+
+        if (!conversation || !conversation.id) {
+          Message.error('Failed to create conversation.');
+          return;
+        }
+
+        updateWorkspaceTime(workspace);
+        openTab(conversation);
+        emitter.emit('chat.history.refresh');
+        void navigate(`/conversation/${conversation.id}`);
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        Message.error(msg);
+      }
+    },
+    [openTabs, activeTabId, openTab, navigate, t]
+  );
 
   // 更新 Tab 溢出状态
   const updateTabOverflow = useCallback(() => {
@@ -103,14 +238,6 @@ const ConversationTabs: React.FC = () => {
     [closeTab, openTabs.length, activeTabId, navigate]
   );
 
-  // 新建会话 - 导航到 Guid 页面让用户选择 agent 类型
-  // Navigate to Guid page so user can pick agent type for new conversation
-  const handleNewConversation = useCallback(() => {
-    const currentTab = openTabs.find((tab) => tab.id === activeTabId);
-    // Pass workspace from current tab so Guid pre-fills directory
-    void navigate('/guid', { state: { workspace: currentTab?.workspace } });
-  }, [navigate, openTabs, activeTabId]);
-
   // 生成右键菜单内容
   const getContextMenu = useCallback(
     (tabId: string) => {
@@ -156,6 +283,34 @@ const ConversationTabs: React.FC = () => {
     [openTabs, closeAllTabs, closeTabsToLeft, closeTabsToRight, closeOtherTabs, navigate, t]
   );
 
+  // Build the agent selector dropdown for the "+" button
+  const agentSelectorMenu = useMemo(
+    () => (
+      <Menu
+        onClickMenuItem={(key) => {
+          const agent = selectorOptions.find((a) => (a.customAgentId ? `custom:${a.customAgentId}` : a.backend) === key);
+          if (agent) {
+            void handleCreateInlineConversation(agent);
+          }
+        }}
+      >
+        {selectorOptions.map((agent) => {
+          const key = agent.customAgentId ? `custom:${agent.customAgentId}` : agent.backend;
+          const logo = AGENT_LOGO_MAP[agent.backend];
+          return (
+            <Menu.Item key={key}>
+              <div className='flex items-center gap-8px'>
+                {logo ? <img src={logo} alt={agent.name} width={16} height={16} style={{ objectFit: 'contain' }} /> : <Plus theme='outline' size={14} />}
+                <span>{agent.name}</span>
+              </div>
+            </Menu.Item>
+          );
+        })}
+      </Menu>
+    ),
+    [selectorOptions, handleCreateInlineConversation]
+  );
+
   const { left: showLeftFade, right: showRightFade } = tabFadeState;
 
   // 检查当前激活的 tab 是否在 openTabs 中
@@ -194,10 +349,12 @@ const ConversationTabs: React.FC = () => {
           ))}
         </div>
 
-        {/* 新建会话按钮 */}
-        <div className='flex items-center justify-center w-40px h-40px shrink-0 cursor-pointer transition-colors duration-200 hover:bg-[var(--fill-2)] ' style={{ borderLeft: '1px solid var(--border-base)' }} onClick={handleNewConversation} title={t('conversation.workspace.createNewConversation')}>
-          <Plus theme='outline' size='16' fill={iconColors.primary} strokeWidth={3} />
-        </div>
+        {/* 新建会话按钮 — inline agent selector dropdown */}
+        <Dropdown droplist={agentSelectorMenu} trigger='click' position='bl'>
+          <div className='flex items-center justify-center w-40px h-40px shrink-0 cursor-pointer transition-colors duration-200 hover:bg-[var(--fill-2)] ' style={{ borderLeft: '1px solid var(--border-base)' }} title={t('conversation.workspace.createNewConversation')}>
+            <Plus theme='outline' size='16' fill={iconColors.primary} strokeWidth={3} />
+          </div>
+        </Dropdown>
 
         {/* 左侧渐变指示器 */}
         {showLeftFade && <div className='pointer-events-none absolute left-0 top-0 bottom-0 w-32px [background:linear-gradient(90deg,var(--bg-2)_0%,transparent_100%)]' />}

@@ -102,11 +102,8 @@ export class AcpAdapter {
       }
 
       case 'available_commands_update': {
-        const commandsMessage = this.convertAvailableCommandsUpdate(sessionUpdate as AvailableCommandsUpdate);
-        if (commandsMessage) {
-          messages.push(commandsMessage);
-        }
-        // Reset message tracking so next agent_message_chunk gets new msg_id
+        // Suppress skill announcement messages — they add noise without user value.
+        // Simply skip; messages array stays empty for this update type.
         this.resetMessageTracking();
         break;
       }
