@@ -1,10 +1,14 @@
-# Margay
+<p align="center">
+  <img src="resources/icon.png" alt="Margay" width="120" />
+</p>
 
-**Unified AI Agent GUI** — Transform your command-line AI agents into a modern, efficient chat interface.
+<h1 align="center">Margay</h1>
+
+<p align="center">
+  <strong>Unified AI Agent GUI</strong> — Transform your command-line AI agents into a modern, efficient chat interface.
+</p>
 
 Margay brings together multiple CLI AI tools under one roof: a polished desktop app (and optional WebUI) that lets you switch between agents, manage skills, schedule tasks, and collaborate — all without leaving the interface.
-
-<!-- [screenshot placeholder — add app screenshots here] -->
 
 ## Features
 
