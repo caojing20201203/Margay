@@ -139,6 +139,8 @@ export type TChatConversation =
         'acp',
         {
           workspace?: string;
+          /** Additional accessible directories besides the primary workspace / 主工作区之外的附加可访问目录 */
+          additionalDirs?: string[];
           backend: AcpBackend;
           cliPath?: string;
           customWorkspace?: boolean;
@@ -162,6 +164,8 @@ export type TChatConversation =
         'codex',
         {
           workspace?: string;
+          /** Additional accessible directories besides the primary workspace / 主工作区之外的附加可访问目录 */
+          additionalDirs?: string[];
           cliPath?: string;
           customWorkspace?: boolean;
           sandboxMode?: 'read-only' | 'workspace-write' | 'danger-full-access'; // Codex sandbox permission mode

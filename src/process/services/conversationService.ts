@@ -74,7 +74,17 @@ export class ConversationService {
       }
 
       // Create conversation object
-      const conversation = await createGeminiAgent(params.model, params.workspace, params.defaultFiles, params.webSearchEngine, params.customWorkspace, contextFileName, params.presetRules, params.enabledSkills, params.presetAssistantId);
+      const conversation = await createGeminiAgent({
+        model: params.model,
+        workspace: params.workspace,
+        defaultFiles: params.defaultFiles,
+        webSearchEngine: params.webSearchEngine,
+        customWorkspace: params.customWorkspace,
+        contextFileName,
+        presetRules: params.presetRules,
+        enabledSkills: params.enabledSkills,
+        presetAssistantId: params.presetAssistantId,
+      });
 
       // Apply custom ID and name if provided
       if (params.id) {
@@ -135,7 +145,17 @@ export class ConversationService {
         const enabledSkills = extraWithPresets.enabledSkills;
         const presetAssistantId = extraWithPresets.presetAssistantId;
 
-        conversation = await createGeminiAgent(model, extra.workspace, extra.defaultFiles, extra.webSearchEngine, extra.customWorkspace, contextFileName, presetRules, enabledSkills, presetAssistantId);
+        conversation = await createGeminiAgent({
+          model,
+          workspace: extra.workspace,
+          defaultFiles: extra.defaultFiles,
+          webSearchEngine: extra.webSearchEngine,
+          customWorkspace: extra.customWorkspace,
+          contextFileName,
+          presetRules,
+          enabledSkills,
+          presetAssistantId,
+        });
       } else if (type === 'acp') {
         conversation = await createAcpAgent(params);
       } else if (type === 'codex') {

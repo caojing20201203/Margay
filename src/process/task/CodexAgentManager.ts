@@ -204,6 +204,8 @@ class CodexAgentManager extends BaseAgentManager<CodexAgentManagerData> implemen
         // Inject preset rules (skills distributed via SkillDistributor, discovered natively by engine)
         processedContent = await prepareFirstMessage(processedContent, {
           presetContext: this.options.presetContext,
+          workspace: this.options.workspace,
+          additionalDirs: this.options.additionalDirs,
         });
 
         const result = await this.agent.newSession(this.workspace, processedContent);

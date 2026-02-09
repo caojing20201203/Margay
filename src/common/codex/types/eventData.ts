@@ -318,6 +318,7 @@ export type ApplyPatchApprovalRequestData = PatchApprovalData;
 export interface CodexAgentManagerData {
   conversation_id: string;
   workspace?: string;
+  additionalDirs?: string[];
   cliPath?: string;
   sandboxMode?: 'read-only' | 'workspace-write' | 'danger-full-access';
   webSearchEnabled?: boolean;

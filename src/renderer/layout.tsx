@@ -18,6 +18,8 @@ import { useDirectorySelection } from './hooks/useDirectorySelection';
 import { useMultiAgentDetection } from './hooks/useMultiAgentDetection';
 import { processCustomCss } from './utils/customCssProcessor';
 import UpdateModal from '@/renderer/components/UpdateModal';
+import { isElectronDesktop } from '@/renderer/utils/platform';
+import MargayLogo from '@/renderer/assets/logos/margay.png';
 
 const useDebug = () => {
   const [count, setCount] = useState(0);
@@ -144,17 +146,18 @@ const Layout: React.FC<{
     };
   }, [customCss]);
 
-  // 检测移动端并响应窗口大小变化
+  // 检测移动端并响应窗口大小变化（仅 WebUI 模式，Electron 桌面端不启用手机态）
+  // Detect mobile viewport (WebUI only; Electron desktop always stays in desktop mode)
   useEffect(() => {
+    if (isElectronDesktop()) return;
+
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
     };
 
-    // 初始检测
     checkMobile();
 
-    // 监听窗口大小变化
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
@@ -196,29 +199,19 @@ const Layout: React.FC<{
             }
           >
             <ArcoLayout.Header
-              className={classNames('flex items-center justify-start py-10px px-16px pl-20px gap-12px layout-sider-header', {
-                'cursor-pointer group ': collapsed,
+              className={classNames('flex items-center justify-center py-2px gap-12px layout-sider-header', {
+                'cursor-pointer group': collapsed,
               })}
             >
-              <div
-                className={classNames('bg-black shrink-0 size-40px relative rd-0.5rem', {
-                  '!size-24px': collapsed,
+              <img
+                className={classNames('shrink-0 size-72px rd-0.5rem', {
+                  '!size-48px': collapsed,
                 })}
+                src={MargayLogo}
+                alt='Margay'
                 onClick={onClick}
-              >
-                <svg
-                  className={classNames('w-5.5 h-5.5 absolute inset-0 m-auto', {
-                    ' scale-140': !collapsed,
-                  })}
-                  viewBox='0 0 80 80'
-                  fill='none'
-                >
-                  <path key='logo-path-1' d='M40 20 Q38 22 25 40 Q23 42 26 42 L30 42 Q32 40 40 30 Q48 40 50 42 L54 42 Q57 42 55 40 Q42 22 40 20' fill='white'></path>
-                  <circle key='logo-circle' cx='40' cy='46' r='3' fill='white'></circle>
-                  <path key='logo-path-2' d='M18 50 Q40 70 62 50' stroke='white' strokeWidth='3.5' fill='none' strokeLinecap='round'></path>
-                </svg>
-              </div>
-              <div className=' flex-1 text-20px collapsed-hidden font-bold'>AionUi</div>
+              />
+              <div className=' flex-1 text-20px collapsed-hidden font-bold'>Margay</div>
               {isMobile && !collapsed && (
                 <button type='button' className='app-titlebar__button' onClick={() => setCollapsed(true)} aria-label='Collapse sidebar'>
                   {collapsed ? <MenuUnfold theme='outline' size='18' fill='currentColor' /> : <MenuFold theme='outline' size='18' fill='currentColor' />}

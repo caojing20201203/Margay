@@ -10,6 +10,7 @@ import { uuid } from '@/common/utils';
 import fs from 'fs/promises';
 import path from 'path';
 import { getSystemDir } from './initStorage';
+import { normalizeAdditionalDirs } from './task/agentUtils';
 
 /**
  * 创建工作空间目录（不复制文件）
@@ -36,7 +37,20 @@ const buildWorkspaceWidthFiles = async (defaultWorkspaceName: string, workspace?
   return { workspace, customWorkspace };
 };
 
-export const createGeminiAgent = async (model: TProviderWithModel, workspace?: string, defaultFiles?: string[], webSearchEngine?: 'google' | 'default', customWorkspace?: boolean, contextFileName?: string, presetRules?: string, enabledSkills?: string[], presetAssistantId?: string): Promise<TChatConversation> => {
+export interface CreateGeminiAgentOptions {
+  model: TProviderWithModel;
+  workspace?: string;
+  defaultFiles?: string[];
+  webSearchEngine?: 'google' | 'default';
+  customWorkspace?: boolean;
+  contextFileName?: string;
+  presetRules?: string;
+  enabledSkills?: string[];
+  presetAssistantId?: string;
+}
+
+export const createGeminiAgent = async (options: CreateGeminiAgentOptions): Promise<TChatConversation> => {
+  const { model, workspace, defaultFiles, webSearchEngine, customWorkspace, contextFileName, presetRules, enabledSkills, presetAssistantId } = options;
   const { workspace: newWorkspace, customWorkspace: finalCustomWorkspace } = await buildWorkspaceWidthFiles(`gemini-temp-${Date.now()}`, workspace, defaultFiles, customWorkspace);
 
   return {
@@ -68,10 +82,12 @@ export const createGeminiAgent = async (model: TProviderWithModel, workspace?: s
 export const createAcpAgent = async (options: ICreateConversationParams): Promise<TChatConversation> => {
   const { extra } = options;
   const { workspace, customWorkspace } = await buildWorkspaceWidthFiles(`${extra.backend}-temp-${Date.now()}`, extra.workspace, extra.defaultFiles, extra.customWorkspace);
+  const normalizedAdditionalDirs = normalizeAdditionalDirs(workspace, extra.additionalDirs);
   return {
     type: 'acp',
     extra: {
       workspace: workspace,
+      additionalDirs: normalizedAdditionalDirs,
       customWorkspace,
       backend: extra.backend,
       cliPath: extra.cliPath,
@@ -91,10 +107,12 @@ export const createAcpAgent = async (options: ICreateConversationParams): Promis
 export const createCodexAgent = async (options: ICreateConversationParams): Promise<TChatConversation> => {
   const { extra } = options;
   const { workspace, customWorkspace } = await buildWorkspaceWidthFiles(`codex-temp-${Date.now()}`, extra.workspace, extra.defaultFiles, extra.customWorkspace);
+  const normalizedAdditionalDirs = normalizeAdditionalDirs(workspace, extra.additionalDirs);
   return {
     type: 'codex',
     extra: {
       workspace: workspace,
+      additionalDirs: normalizedAdditionalDirs,
       customWorkspace,
       cliPath: extra.cliPath,
       sandboxMode: 'workspace-write', // 默认为读写权限 / Default to read-write permission

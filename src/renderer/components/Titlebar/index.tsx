@@ -15,7 +15,7 @@ interface TitlebarProps {
 
 const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
   const { t } = useTranslation();
-  const appTitle = useMemo(() => t('app.name', { defaultValue: 'AionUi' }), [t]);
+  const appTitle = useMemo(() => t('app.name', { defaultValue: 'Margay' }), [t]);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(true);
   const layout = useLayoutContext();
 
@@ -63,7 +63,8 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
   const menuStyle: React.CSSProperties = useMemo(() => {
     if (!isMacRuntime || !showSiderToggle) return {};
 
-    const marginLeft = layout?.siderCollapsed ? '80px' : '210px';
+    // macOS traffic lights occupy ~78px; 96px adds 18px buffer for visual clearance in collapsed state.
+    const marginLeft = layout?.siderCollapsed ? '96px' : '210px';
     return {
       marginLeft,
       transition: 'margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1)',

@@ -20,6 +20,7 @@ import { extractTextFromMessage, processCronInMessage } from './MessageMiddlewar
 
 interface AcpAgentManagerData {
   workspace?: string;
+  additionalDirs?: string[];
   backend: AcpBackend;
   cliPath?: string;
   customWorkspace?: boolean;
@@ -37,11 +38,15 @@ interface AcpAgentManagerData {
 }
 
 class AcpAgentManager extends BaseAgentManager<AcpAgentManagerData, AcpPermissionOption> {
-  workspace: string;
   agent: AcpAgent;
   private bootstrap: Promise<AcpAgent> | undefined;
   private isFirstMessage: boolean = true;
   options: AcpAgentManagerData;
+
+  // Derive workspace from options to avoid duplicate state (I8 fix)
+  get workspace(): string | undefined {
+    return this.options.workspace;
+  }
   // Track current message for cron detection (accumulated from streaming chunks)
   private currentMsgId: string | null = null;
   private currentMsgContent: string = '';
@@ -49,7 +54,6 @@ class AcpAgentManager extends BaseAgentManager<AcpAgentManagerData, AcpPermissio
   constructor(data: AcpAgentManagerData) {
     super('acp', data);
     this.conversation_id = data.conversation_id;
-    this.workspace = data.workspace;
     this.options = data;
   }
 
@@ -117,6 +121,7 @@ class AcpAgentManager extends BaseAgentManager<AcpAgentManagerData, AcpPermissio
         customEnv: customEnv,
         extra: {
           workspace: data.workspace,
+          additionalDirs: data.additionalDirs,
           backend: data.backend,
           cliPath: cliPath,
           customWorkspace: data.customWorkspace,
@@ -256,6 +261,8 @@ class AcpAgentManager extends BaseAgentManager<AcpAgentManagerData, AcpPermissio
         if (this.isFirstMessage) {
           contentToSend = await prepareFirstMessage(contentToSend, {
             presetContext: this.options.presetContext,
+            workspace: this.options.workspace,
+            additionalDirs: this.options.additionalDirs,
           });
         }
 

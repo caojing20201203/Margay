@@ -59,6 +59,7 @@ export interface AcpAgentConfig {
   customEnv?: Record<string, string>; // Custom environment variables (for custom backend)
   extra?: {
     workspace?: string;
+    additionalDirs?: string[];
     backend: AcpBackend;
     cliPath?: string;
     customWorkspace?: boolean;
@@ -81,6 +82,7 @@ export class AcpAgent {
   private readonly id: string;
   private extra: {
     workspace?: string;
+    additionalDirs?: string[];
     backend: AcpBackend;
     cliPath?: string;
     customWorkspace?: boolean;
@@ -118,6 +120,7 @@ export class AcpAgent {
     this.onSessionIdUpdate = config.onSessionIdUpdate;
     this.extra = config.extra || {
       workspace: config.workingDir,
+      additionalDirs: undefined,
       backend: config.backend,
       cliPath: config.cliPath,
       customWorkspace: false, // Default to system workspace
@@ -390,7 +393,7 @@ export class AcpAgent {
 
       // For workspace file references (filename only), try to resolve and read
       // 对于工作区文件引用（只有文件名），尝试解析和读取
-      const resolvedPath = await this.resolveAtPath(atPath, workspace);
+      const resolvedPath = await this.resolveAtPath(atPath, workspace, this.extra.additionalDirs);
 
       if (resolvedPath) {
         try {
@@ -442,28 +445,45 @@ export class AcpAgent {
    * Resolve an @ path to an actual file path in the workspace
    * 将 @ 路径解析为工作区中的实际文件路径
    */
-  private async resolveAtPath(atPath: string, workspace: string): Promise<string | null> {
-    // Try direct path first
-    const directPath = path.resolve(workspace, atPath);
-    try {
-      const stats = await fs.stat(directPath);
-      if (stats.isFile()) {
-        return directPath;
+  private async resolveAtPath(atPath: string, workspace: string, additionalDirs?: string[]): Promise<string | null> {
+    const fileExists = async (candidatePath: string): Promise<string | null> => {
+      try {
+        const stats = await fs.stat(candidatePath);
+        if (stats.isFile()) {
+          return candidatePath;
+        }
+      } catch {
+        // Ignore fs errors and continue trying fallbacks
       }
-      // If it's a directory, we don't read it (for now)
       return null;
-    } catch {
-      // Direct path doesn't exist, try searching for the file
+    };
+
+    // Try workspace first (absolute atPath will also be resolved correctly here)
+    const workspaceCandidate = await fileExists(path.resolve(workspace, atPath));
+    if (workspaceCandidate) {
+      return workspaceCandidate;
     }
 
-    // Try to find file by name in workspace (simple search)
-    try {
-      const fileName = path.basename(atPath);
-      const foundPath = await this.findFileInWorkspace(workspace, fileName);
-      return foundPath;
-    } catch {
-      return null;
+    // Try each additional directory with the same relative atPath
+    const normalizedAdditionalDirs = additionalDirs ?? [];
+    for (const additionalDir of normalizedAdditionalDirs) {
+      const additionalCandidate = await fileExists(path.resolve(additionalDir, atPath));
+      if (additionalCandidate) {
+        return additionalCandidate;
+      }
     }
+
+    // Fallback: search by basename under workspace, then additional directories
+    const fileName = path.basename(atPath);
+    const searchRoots = [workspace, ...normalizedAdditionalDirs];
+    for (const root of searchRoots) {
+      const foundPath = await this.findFileInWorkspace(root, fileName);
+      if (foundPath) {
+        return foundPath;
+      }
+    }
+
+    return null;
   }
 
   /**

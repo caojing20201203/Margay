@@ -273,7 +273,7 @@ const ChannelModalContent: React.FC = () => {
     const telegramChannel: ChannelConfig = {
       id: 'telegram',
       title: t('channels.telegramTitle', 'Telegram'),
-      description: t('channels.telegramDesc', 'Chat with AionUi assistant via Telegram'),
+      description: t('channels.telegramDesc', 'Chat with Margay assistant via Telegram'),
       status: 'active',
       enabled: pluginStatus?.enabled || false,
       disabled: enableLoading,
@@ -286,7 +286,7 @@ const ChannelModalContent: React.FC = () => {
     const larkChannel: ChannelConfig = {
       id: 'lark',
       title: t('channels.larkTitle', 'Lark / Feishu'),
-      description: t('channels.larkDesc', 'Chat with AionUi assistant via Lark or Feishu'),
+      description: t('channels.larkDesc', 'Chat with Margay assistant via Lark or Feishu'),
       status: 'active',
       enabled: larkPluginStatus?.enabled || false,
       disabled: larkEnableLoading,
@@ -299,7 +299,7 @@ const ChannelModalContent: React.FC = () => {
       {
         id: 'slack',
         title: t('channels.slackTitle', 'Slack'),
-        description: t('channels.slackDesc', 'Chat with AionUi assistant via Slack'),
+        description: t('channels.slackDesc', 'Chat with Margay assistant via Slack'),
         status: 'coming_soon',
         enabled: false,
         disabled: true,
@@ -308,7 +308,7 @@ const ChannelModalContent: React.FC = () => {
       {
         id: 'discord',
         title: t('channels.discordTitle', 'Discord'),
-        description: t('channels.discordDesc', 'Chat with AionUi assistant via Discord'),
+        description: t('channels.discordDesc', 'Chat with Margay assistant via Discord'),
         status: 'coming_soon',
         enabled: false,
         disabled: true,

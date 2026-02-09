@@ -194,7 +194,7 @@ export const handleHelpShow: ActionHandler = async (context) => {
   }
   return createSuccessResponse({
     type: 'text',
-    text: ['❓ <b>AionUi Assistant</b>', '', 'A remote assistant to interact with AionUi via Telegram.', '', '<b>Common Actions:</b>', '• 🆕 New Chat - Start a new session', '• 📊 Status - View current session status', '• ❓ Help - Show this help message', '', 'Send a message to chat with the AI assistant.'].join('\n'),
+    text: ['❓ <b>Margay Assistant</b>', '', 'A remote assistant to interact with Margay via Telegram.', '', '<b>Common Actions:</b>', '• 🆕 New Chat - Start a new session', '• 📊 Status - View current session status', '• ❓ Help - Show this help message', '', 'Send a message to chat with the AI assistant.'].join('\n'),
     parseMode: 'HTML',
     replyMarkup: createHelpKeyboard(),
   });
@@ -232,7 +232,7 @@ export const handleHelpPairing: ActionHandler = async (context) => {
   }
   return createSuccessResponse({
     type: 'text',
-    text: ['🔗 <b>Pairing Guide</b>', '', '<b>First-time Setup:</b>', '1. Send any message to the bot', '2. Bot displays pairing code', '3. Approve pairing in AionUi settings', '4. Ready to use after pairing', '', '<b>Notes:</b>', '• Pairing code valid for 10 minutes', '• AionUi app must be running', '• One Telegram account can only pair once'].join('\n'),
+    text: ['🔗 <b>Pairing Guide</b>', '', '<b>First-time Setup:</b>', '1. Send any message to the bot', '2. Bot displays pairing code', '3. Approve pairing in Margay settings', '4. Ready to use after pairing', '', '<b>Notes:</b>', '• Pairing code valid for 10 minutes', '• Margay app must be running', '• One Telegram account can only pair once'].join('\n'),
     parseMode: 'HTML',
     replyMarkup: createHelpKeyboard(),
   });
@@ -270,7 +270,7 @@ export const handleSettingsShow: ActionHandler = async (context) => {
   }
   return createSuccessResponse({
     type: 'text',
-    text: ['⚙️ <b>Settings</b>', '', 'Channel settings need to be configured in the AionUi app.', '', 'Open AionUi → WebUI → Channels'].join('\n'),
+    text: ['⚙️ <b>Settings</b>', '', 'Channel settings need to be configured in the Margay app.', '', 'Open Margay → WebUI → Channels'].join('\n'),
     parseMode: 'HTML',
     replyMarkup: createMainMenuKeyboard(),
   });

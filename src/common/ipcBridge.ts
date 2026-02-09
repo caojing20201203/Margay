@@ -375,6 +375,7 @@ export interface ICreateConversationParams {
   model: TProviderWithModel;
   extra: {
     workspace?: string;
+    additionalDirs?: string[];
     customWorkspace?: boolean;
     defaultFiles?: string[];
     backend?: AcpBackend;
