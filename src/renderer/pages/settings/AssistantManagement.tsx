@@ -66,7 +66,7 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]); // 启用的 skills（勾选状态）/ Enabled skills
   const [skillsModalVisible, setSkillsModalVisible] = useState(false);
   const [skillPath, setSkillPath] = useState(''); // Skill folder path input
-  const [commonPaths, setCommonPaths] = useState<Array<{ name: string; path: string }>>([]); // Common skill paths detected
+  const [commonPaths, setCommonPaths] = useState<Array<{ name: string; path: string; exists: boolean }>>([]); // Common skill paths detected
   const [pendingSkills, setPendingSkills] = useState<PendingSkill[]>([]); // 待导入的 skills / Pending skills to import
   const [deletePendingSkillName, setDeletePendingSkillName] = useState<string | null>(null); // 待删除的 pending skill 名称 / Pending skill name to delete
   const [deleteCustomSkillName, setDeleteCustomSkillName] = useState<string | null>(null); // 待从助手移除的 custom skill 名称 / Custom skill to remove from assistant
@@ -888,27 +888,27 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
         maskStyle={{ zIndex: 2490 }}
       >
         <div className='space-y-16px'>
-          {commonPaths.length > 0 && (
-            <div>
-              <div className='text-12px text-t-secondary mb-8px'>{t('settings.quickScan', { defaultValue: 'Quick Scan Common Paths' })}</div>
-              <div className='flex flex-wrap gap-8px'>
-                {commonPaths.map((cp) => (
-                  <Button
-                    key={cp.path}
-                    size='small'
-                    type='secondary'
-                    className='rounded-[100px] bg-fill-2 hover:bg-fill-3'
-                    onClick={() => {
-                      if (skillPath.includes(cp.path)) return;
-                      setSkillPath(skillPath ? `${skillPath}, ${cp.path}` : cp.path);
-                    }}
-                  >
-                    {cp.name}
-                  </Button>
-                ))}
-              </div>
+          <div>
+            <div className='text-12px text-t-secondary mb-8px'>{t('settings.quickScan', { defaultValue: 'Quick Scan Common Paths' })}</div>
+            <div className='flex flex-wrap gap-8px'>
+              {commonPaths.map((cp) => (
+                <Button
+                  key={cp.path}
+                  size='small'
+                  type='secondary'
+                  disabled={!cp.exists}
+                  className={`rounded-[100px] ${cp.exists ? 'bg-fill-2 hover:bg-fill-3' : 'opacity-50'}`}
+                  onClick={() => {
+                    if (!cp.exists || skillPath.includes(cp.path)) return;
+                    setSkillPath(skillPath ? `${skillPath}, ${cp.path}` : cp.path);
+                  }}
+                >
+                  {cp.name}
+                  {!cp.exists && <span className='text-10px ml-4px text-t-tertiary'>(not found)</span>}
+                </Button>
+              ))}
             </div>
-          )}
+          </div>
 
           <div className='space-y-12px'>
             <Typography.Text>{t('settings.skillFolderPath', { defaultValue: 'Skill Folder Path' })}</Typography.Text>

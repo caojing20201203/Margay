@@ -556,6 +556,7 @@
     "skills": "技能",
     "engineNativeSkills": "偵測到的技能",
     "engineNativeDescription": "由代理在引擎目錄中建立的技能，不受 AionUi 管理。",
+    "noEngineNativeSkills": "未偵測到引擎原生技能。代理建立的技能將顯示在此處。",
     "importToAionUi": "匯入",
     "noSkillMd": "缺少 SKILL.md — 無法匯入",
     "skillImported": "技能「{{name}}」匯入成功",

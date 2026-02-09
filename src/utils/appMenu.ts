@@ -7,15 +7,18 @@
 import { ipcBridge } from '@/common';
 import type { MenuItemConstructorOptions } from 'electron';
 import { Menu, app } from 'electron';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require('../../package.json') as { productName?: string };
 
 export function setupApplicationMenu(): void {
   const isMac = process.platform === 'darwin';
+  const appName = packageJson.productName ?? app.name;
 
   const template: MenuItemConstructorOptions[] = [];
 
   if (isMac) {
     template.push({
-      label: app.name,
+      label: appName,
       submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'services' }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }],
     });
   }

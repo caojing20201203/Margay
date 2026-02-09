@@ -119,7 +119,7 @@ export const fs = {
   // 扫描目录下的 skills / Scan directory for skills
   scanForSkills: bridge.buildProvider<IBridgeResponse<Array<{ name: string; description: string; path: string }>>, { folderPath: string }>('scan-for-skills'),
   // 检测常见的 skills 路径 / Detect common skills paths
-  detectCommonSkillPaths: bridge.buildProvider<IBridgeResponse<Array<{ name: string; path: string }>>, void>('detect-common-skill-paths'),
+  detectCommonSkillPaths: bridge.buildProvider<IBridgeResponse<Array<{ name: string; path: string; exists: boolean }>>, void>('detect-common-skill-paths'),
   // 检测引擎目录中非 AionUi 管理的 skills / Detect engine-native skills not managed by AionUi
   detectEngineNativeSkills: bridge.buildProvider<IBridgeResponse<Array<{ name: string; engine: 'claude' | 'codex'; path: string; hasSkillMd: boolean }>>, { workspace: string }>('detect-engine-native-skills'),
 };

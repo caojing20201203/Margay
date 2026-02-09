@@ -777,6 +777,7 @@
     "quickScan": "Quick Scan Common Paths",
     "engineNativeSkills": "Detected Skills",
     "engineNativeDescription": "Skills created by agents in engine directories, not managed by AionUi.",
+    "noEngineNativeSkills": "No engine-native skills detected. Skills created by agents will appear here.",
     "importToAionUi": "Import",
     "noSkillMd": "Missing SKILL.md — cannot import",
     "skillImported": "Skill \"{{name}}\" imported successfully",

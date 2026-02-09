@@ -9,7 +9,7 @@ import AionScrollArea from '@/renderer/components/base/AionScrollArea';
 import { iconColors } from '@/renderer/theme/colors';
 import { isElectronDesktop } from '@/renderer/utils/platform';
 import { Tabs } from '@arco-design/web-react';
-import { Computer, Earth, Gemini, Info, LinkCloud, Toolkit } from '@icon-park/react';
+import { Computer, Earth, Gemini, Info, LinkCloud, Toolkit, Robot, MagicWand, Display } from '@icon-park/react';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,8 @@ import ModelModalContent from './contents/ModelModalContent';
 import SystemModalContent from './contents/SystemModalContent';
 import ToolsModalContent from './contents/ToolsModalContent';
 import WebuiModalContent from './contents/WebuiModalContent';
+import DisplayModalContent from './contents/DisplayModalContent';
+import SkillsManagement from '@/renderer/pages/settings/SkillsManagement';
 import { SettingsViewModeProvider } from './settingsViewContext';
 
 // ==================== 常量定义 / Constants ====================
@@ -51,7 +53,7 @@ const RESIZE_DEBOUNCE_DELAY = 150;
 /**
  * 设置标签页类型 / Settings tab type
  */
-export type SettingTab = 'gemini' | 'model' | 'agent' | 'tools' | 'webui' | 'system' | 'about';
+export type SettingTab = 'gemini' | 'model' | 'agent' | 'skills' | 'display' | 'tools' | 'webui' | 'system' | 'about';
 
 /**
  * 设置弹窗组件属性 / Settings modal component props
@@ -176,13 +178,30 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onCancel, defaul
       },
     ];
 
-    // 仅在桌面端添加 WebUI 选项（包含 Assistant 配置）/ Only add WebUI option on desktop (includes Assistant config)
+    // 仅在桌面端添加 Agent/Skills/Display/WebUI 选项 / Only add desktop-specific options
     if (isDesktop) {
-      items.push({
-        key: 'webui',
-        label: t('settings.webui'),
-        icon: <Earth theme='outline' size='20' fill={iconColors.secondary} />,
-      });
+      items.push(
+        {
+          key: 'agent',
+          label: t('settings.agent'),
+          icon: <Robot theme='outline' size='20' fill={iconColors.secondary} />,
+        },
+        {
+          key: 'skills',
+          label: t('settings.skills'),
+          icon: <MagicWand theme='outline' size='20' fill={iconColors.secondary} />,
+        },
+        {
+          key: 'display',
+          label: t('settings.display'),
+          icon: <Display theme='outline' size='20' fill={iconColors.secondary} />,
+        },
+        {
+          key: 'webui',
+          label: t('settings.webui'),
+          icon: <Earth theme='outline' size='20' fill={iconColors.secondary} />,
+        }
+      );
     }
 
     items.push(
@@ -201,8 +220,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onCancel, defaul
     return items;
   }, [t, isDesktop]);
 
-  console.log('%c [  ]-211', 'font-size:13px; background:pink; color:#bf2c9f;', isDesktop, menuItems);
-
   // 渲染当前选中的设置内容 / Render current selected settings content
   const renderContent = () => {
     switch (activeTab) {
@@ -212,6 +229,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onCancel, defaul
         return <ModelModalContent />;
       case 'agent':
         return <AgentModalContent />;
+      case 'skills':
+        return <SkillsManagement />;
+      case 'display':
+        return <DisplayModalContent />;
       case 'tools':
         return <ToolsModalContent />;
       case 'webui':

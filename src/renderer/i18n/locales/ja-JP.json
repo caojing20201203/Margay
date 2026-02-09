@@ -585,6 +585,7 @@
     "skills": "スキル",
     "engineNativeSkills": "検出されたスキル",
     "engineNativeDescription": "エンジンディレクトリでエージェントが作成したスキル。AionUi では管理されていません。",
+    "noEngineNativeSkills": "エンジンネイティブスキルは検出されませんでした。エージェントが作成したスキルがここに表示されます。",
     "importToAionUi": "インポート",
     "noSkillMd": "SKILL.md がありません — インポートできません",
     "skillImported": "スキル「{{name}}」のインポートに成功しました",

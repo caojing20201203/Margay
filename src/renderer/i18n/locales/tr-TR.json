@@ -785,6 +785,7 @@
     "quickScan": "Ortak Yolları Hızlı Tara",
     "engineNativeSkills": "Algılanan Yetenekler",
     "engineNativeDescription": "Motorların dizinlerinde ajanlar tarafından oluşturulan yetenekler, AionUi tarafından yönetilmez.",
+    "noEngineNativeSkills": "Motor yerel yeteneği algılanmadı. Ajanlar tarafından oluşturulan yetenekler burada görünecektir.",
     "importToAionUi": "İçe Aktar",
     "noSkillMd": "SKILL.md eksik — içe aktarılamaz",
     "skillImported": "\"{{name}}\" yeteneği başarıyla içe aktarıldı",

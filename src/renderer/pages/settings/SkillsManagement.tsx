@@ -35,7 +35,7 @@ const SkillsManagement: React.FC = () => {
   const [availableSkills, setAvailableSkills] = useState<SkillInfo[]>([]);
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [skillPath, setSkillPath] = useState('');
-  const [commonPaths, setCommonPaths] = useState<Array<{ name: string; path: string }>>([]);
+  const [commonPaths, setCommonPaths] = useState<Array<{ name: string; path: string; exists: boolean }>>([]);
   const [loading, setLoading] = useState(true);
   const [engineNativeSkills, setEngineNativeSkills] = useState<EngineNativeSkill[]>([]);
   const [importingSkill, setImportingSkill] = useState<string | null>(null);
@@ -231,10 +231,10 @@ const SkillsManagement: React.FC = () => {
       )}
 
       {/* Engine-Native Skills Section */}
-      {engineNativeSkills.length > 0 && (
-        <Collapse defaultActiveKey={['engine-native-skills']}>
-          <Collapse.Item header={<span className='text-13px font-medium'>{t('settings.engineNativeSkills', { defaultValue: 'Detected Skills' })}</span>} name='engine-native-skills' extra={<span className='text-12px text-t-secondary'>{engineNativeSkills.length}</span>}>
-            <div className='text-12px color-#86909C mb-8px'>{t('settings.engineNativeDescription', { defaultValue: 'Skills created by agents in engine directories, not managed by AionUi.' })}</div>
+      <Collapse defaultActiveKey={['engine-native-skills']}>
+        <Collapse.Item header={<span className='text-13px font-medium'>{t('settings.engineNativeSkills', { defaultValue: 'Detected Skills' })}</span>} name='engine-native-skills' extra={<span className='text-12px text-t-secondary'>{engineNativeSkills.length}</span>}>
+          <div className='text-12px color-#86909C mb-8px'>{t('settings.engineNativeDescription', { defaultValue: 'Skills created by agents in engine directories, not managed by AionUi.' })}</div>
+          {engineNativeSkills.length > 0 ? (
             <div className='space-y-4px'>
               {engineNativeSkills.map((skill) => (
                 <div key={`${skill.engine}-${skill.name}`} className='flex items-center justify-between gap-8px p-8px hover:bg-fill-1 rounded-4px'>
@@ -262,9 +262,11 @@ const SkillsManagement: React.FC = () => {
                 </div>
               ))}
             </div>
-          </Collapse.Item>
-        </Collapse>
-      )}
+          ) : (
+            <div className='text-12px text-t-tertiary py-8px'>{t('settings.noEngineNativeSkills', { defaultValue: 'No engine-native skills detected. Skills created by agents will appear here.' })}</div>
+          )}
+        </Collapse.Item>
+      </Collapse>
 
       {/* Import Skills Modal */}
       <Modal
@@ -280,27 +282,27 @@ const SkillsManagement: React.FC = () => {
         className='w-[90vw] md:w-[500px]'
       >
         <div className='space-y-16px'>
-          {commonPaths.length > 0 && (
-            <div>
-              <div className='text-12px text-t-secondary mb-8px'>{t('settings.quickScan', { defaultValue: 'Quick Scan Common Paths' })}</div>
-              <div className='flex flex-wrap gap-8px'>
-                {commonPaths.map((cp) => (
-                  <Button
-                    key={cp.path}
-                    size='small'
-                    type='secondary'
-                    className='rounded-[100px] bg-fill-2 hover:bg-fill-3'
-                    onClick={() => {
-                      if (skillPath.includes(cp.path)) return;
-                      setSkillPath(skillPath ? `${skillPath}, ${cp.path}` : cp.path);
-                    }}
-                  >
-                    {cp.name}
-                  </Button>
-                ))}
-              </div>
+          <div>
+            <div className='text-12px text-t-secondary mb-8px'>{t('settings.quickScan', { defaultValue: 'Quick Scan Common Paths' })}</div>
+            <div className='flex flex-wrap gap-8px'>
+              {commonPaths.map((cp) => (
+                <Button
+                  key={cp.path}
+                  size='small'
+                  type='secondary'
+                  disabled={!cp.exists}
+                  className={`rounded-[100px] ${cp.exists ? 'bg-fill-2 hover:bg-fill-3' : 'opacity-50'}`}
+                  onClick={() => {
+                    if (!cp.exists || skillPath.includes(cp.path)) return;
+                    setSkillPath(skillPath ? `${skillPath}, ${cp.path}` : cp.path);
+                  }}
+                >
+                  {cp.name}
+                  {!cp.exists && <span className='text-10px ml-4px text-t-tertiary'>(not found)</span>}
+                </Button>
+              ))}
             </div>
-          )}
+          </div>
 
           <div className='space-y-12px'>
             <Typography.Text>{t('settings.skillFolderPath', { defaultValue: 'Skill Folder Path' })}</Typography.Text>

@@ -773,6 +773,7 @@
     "quickScan": "快速扫描常用路径",
     "engineNativeSkills": "检测到的技能",
     "engineNativeDescription": "由代理在引擎目录中创建的技能，不受 AionUi 管理。",
+    "noEngineNativeSkills": "未检测到引擎原生技能。代理创建的技能将显示在此处。",
     "importToAionUi": "导入",
     "noSkillMd": "缺少 SKILL.md — 无法导入",
     "skillImported": "技能 \"{{name}}\" 导入成功",

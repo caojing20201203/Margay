@@ -921,22 +921,25 @@ export function initFsBridge(): void {
       const candidates = [
         { name: 'Gemini', path: path.join(homedir, '.gemini', 'skills') },
         { name: 'Claude', path: path.join(homedir, '.claude', 'skills') },
+        { name: 'Codex', path: path.join(homedir, '.codex', 'skills') },
       ];
 
-      const detected: Array<{ name: string; path: string }> = [];
+      const result: Array<{ name: string; path: string; exists: boolean }> = [];
       for (const candidate of candidates) {
+        let exists = false;
         try {
           await fs.access(candidate.path);
-          detected.push(candidate);
+          exists = true;
         } catch {
           // Path doesn't exist
         }
+        result.push({ ...candidate, exists });
       }
 
       return {
         success: true,
-        data: detected,
-        msg: `Detected ${detected.length} common paths`,
+        data: result,
+        msg: `Detected ${result.filter((r) => r.exists).length} existing paths`,
       };
     } catch (error) {
       console.error('[fsBridge] Failed to detect common paths:', error);
