@@ -169,6 +169,12 @@ my-video
 # Codex config
 .codex/
 
+# Internal project configs (Ralph-Lisa workflow, AI agent instructions)
+CLAUDE.md
+CODEX.md
+.aionui/
+.specify/
+
 # Electron build cache (literal dir name from env substitution)
 $\{env.ELECTRON_CACHE\}/
 
