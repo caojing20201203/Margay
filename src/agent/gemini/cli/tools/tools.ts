@@ -5,7 +5,7 @@
  */
 
 import type { FunctionDeclaration, PartListUnion } from '@google/genai';
-import { ToolErrorType } from '@office-ai/aioncli-core';
+import { ToolErrorType } from '@margay/agent-core';
 import type { DiffUpdateResult } from '../ide/ideContext';
 import { SchemaValidator } from '../utils/schemaValidator';
 

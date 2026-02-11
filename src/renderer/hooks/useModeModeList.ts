@@ -27,8 +27,8 @@ const defaultGeminiModeDescriptions: GeminiModeDescriptions = {
 };
 
 // 生成 Gemini 模型列表，与终端 CLI 保持一致 / Build Gemini model list matching terminal CLI
-// TODO: 后端 aioncli-core 需要支持 auto-25 值以实现真正的 Gemini 2.5 auto 模式
-// TODO: Backend aioncli-core needs to support auto-25 value for true Gemini 2.5 auto mode
+// TODO: 后端 @margay/agent-core 需要支持 auto-25 值以实现真正的 Gemini 2.5 auto 模式
+// TODO: Backend @margay/agent-core needs to support auto-25 value for true Gemini 2.5 auto mode
 export const getGeminiModeList = (options?: GeminiModeListOptions): GeminiModeOption[] => {
   const descriptions = options?.descriptions || defaultGeminiModeDescriptions;
 
@@ -49,8 +49,8 @@ export const getGeminiModeList = (options?: GeminiModeListOptions): GeminiModeOp
       label: 'Manual',
       value: 'manual', // 展开子菜单选择具体模型 / Expand submenu to select specific model
       description: descriptions.manual,
-      // 与 aioncli-core/src/config/models.ts 中定义的模型名保持一致
-      // Match model names defined in aioncli-core/src/config/models.ts
+      // 与 @margay/agent-core/src/config/models.ts 中定义的模型名保持一致
+      // Match model names defined in @margay/agent-core/src/config/models.ts
       // PREVIEW_GEMINI_MODEL = 'gemini-3-pro-preview'
       // DEFAULT_GEMINI_MODEL = 'gemini-2.5-pro'
       // DEFAULT_GEMINI_FLASH_MODEL = 'gemini-2.5-flash'

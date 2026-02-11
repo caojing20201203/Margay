@@ -19,7 +19,7 @@
  * 4. Connection State Monitoring / 连接状态监控
  */
 
-import type { ServerGeminiStreamEvent } from '@office-ai/aioncli-core';
+import type { ServerGeminiStreamEvent } from '@margay/agent-core';
 
 // Stream Connection Configuration / 流式连接配置
 export interface StreamResilienceConfig {

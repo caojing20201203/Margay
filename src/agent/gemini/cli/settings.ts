@@ -8,8 +8,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { homedir, platform } from 'os';
 import * as dotenv from 'dotenv';
-import type { MCPServerConfig, BugCommandSettings, TelemetrySettings, AuthType } from '@office-ai/aioncli-core';
-import { GEMINI_DIR, getErrorMessage } from '@office-ai/aioncli-core';
+import type { MCPServerConfig, BugCommandSettings, TelemetrySettings, AuthType } from '@margay/agent-core';
+import { GEMINI_DIR, getErrorMessage } from '@margay/agent-core';
 import stripJsonComments from 'strip-json-comments';
 
 export const SETTINGS_DIRECTORY_NAME = '.gemini';

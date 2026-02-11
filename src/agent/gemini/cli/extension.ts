@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { MCPServerConfig, GeminiCLIExtension } from '@office-ai/aioncli-core';
+import type { MCPServerConfig, GeminiCLIExtension } from '@margay/agent-core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';

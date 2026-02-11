@@ -19,9 +19,9 @@ import { Pipe } from './pipe';
  * 获取 worker 进程的工作目录
  * Get working directory for worker process
  *
- * 在打包环境中，需要指向 app.asar.unpacked 目录以便 aioncli-core 能找到 WASM 文件
+ * 在打包环境中，需要指向 app.asar.unpacked 目录以便 @margay/agent-core 能找到 WASM 文件
  * In packaged environment, needs to point to app.asar.unpacked directory
- * so aioncli-core can find WASM files
+ * so @margay/agent-core can find WASM files
  */
 function getWorkerCwd(): string {
   if (app.isPackaged) {

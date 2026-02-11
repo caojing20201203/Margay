@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType, DEFAULT_GEMINI_FLASH_MODEL, DEFAULT_GEMINI_MODEL, isApiError, isStructuredError, UserTierId } from '@office-ai/aioncli-core';
+import { AuthType, DEFAULT_GEMINI_FLASH_MODEL, DEFAULT_GEMINI_MODEL, isApiError, isStructuredError, UserTierId } from '@margay/agent-core';
 
 /**
  * 检查错误是否为 Pro 模型配额超限错误
  * Check if error is a Pro model quota exceeded error
  *
- * aioncli-core v0.18.4 移除了 isProQuotaExceededError，本地实现替代
- * isProQuotaExceededError was removed in aioncli-core v0.18.4, local implementation
+ * @margay/agent-core v0.18.4 移除了 isProQuotaExceededError，本地实现替代
+ * isProQuotaExceededError was removed in @margay/agent-core v0.18.4, local implementation
  */
 function isProQuotaExceededError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
@@ -25,8 +25,8 @@ function isProQuotaExceededError(error: unknown): boolean {
  * 检查错误是否为通用配额超限错误
  * Check if error is a generic quota exceeded error
  *
- * aioncli-core v0.18.4 移除了 isGenericQuotaExceededError，本地实现替代
- * isGenericQuotaExceededError was removed in aioncli-core v0.18.4, local implementation
+ * @margay/agent-core v0.18.4 移除了 isGenericQuotaExceededError，本地实现替代
+ * isGenericQuotaExceededError was removed in @margay/agent-core v0.18.4, local implementation
  */
 function isGenericQuotaExceededError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;

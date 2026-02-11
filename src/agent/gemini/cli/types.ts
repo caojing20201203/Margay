@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ToolCallConfirmationDetails, ToolResultDisplay } from '@office-ai/aioncli-core';
+import type { ToolCallConfirmationDetails, ToolResultDisplay } from '@margay/agent-core';
 
 // Only defining the state enum needed by the UI
 export enum StreamingState {

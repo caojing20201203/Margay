@@ -12,16 +12,16 @@ import { ProcessConfig } from '../../../initStorage';
 /**
  * Margay 本地 MCP 代理实现
  *
- * 专门用于管理通过 @office-ai/aioncli-core 运行的本地 Gemini CLI 的 MCP 配置
+ * 专门用于管理通过 @margay/agent-core 运行的本地 Gemini CLI 的 MCP 配置
  *
  * 工作原理：
  * 1. MCP 配置存储在 ProcessConfig 的 'mcp.config' 中
- * 2. GeminiAgentManager 在启动时从 mcp.config 读取并转换为 @office-ai/aioncli-core 格式
- * 3. @office-ai/aioncli-core 在运行时使用这些 MCP servers
+ * 2. GeminiAgentManager 在启动时从 mcp.config 读取并转换为 @margay/agent-core 格式
+ * 3. @margay/agent-core 在运行时使用这些 MCP servers
  *
  * 与其他 ACP Backend MCP Agents 的区别：
  * - ACP Backend Agents: 管理真实的 CLI 工具的 MCP 配置 (如 claude mcp, qwen mcp 命令)
- * - MargayMcpAgent: 管理 Margay 本地 @office-ai/aioncli-core 的运行时 MCP 配置
+ * - MargayMcpAgent: 管理 Margay 本地 @margay/agent-core 的运行时 MCP 配置
  */
 export class MargayMcpAgent extends AbstractMcpAgent {
   constructor() {
@@ -31,8 +31,8 @@ export class MargayMcpAgent extends AbstractMcpAgent {
   }
 
   getSupportedTransports(): string[] {
-    // @office-ai/aioncli-core 支持 stdio, sse, http
-    // 参考: node_modules/@office-ai/aioncli-core/dist/src/config/config.d.ts -> MCPServerConfig
+    // @margay/agent-core 支持 stdio, sse, http
+    // 参考: node_modules/@margay/agent-core/dist/src/config/config.d.ts -> MCPServerConfig
     return ['stdio', 'sse', 'http'];
   }
 
@@ -48,7 +48,7 @@ export class MargayMcpAgent extends AbstractMcpAgent {
       }
 
       // 返回所有配置的 MCP servers
-      // 过滤出 @office-ai/aioncli-core 支持的传输类型
+      // 过滤出 @margay/agent-core 支持的传输类型
       return mcpConfig.filter((server: IMcpServer) => {
         const supportedTypes = this.getSupportedTransports();
         return supportedTypes.includes(server.transport.type);

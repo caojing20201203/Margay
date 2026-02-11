@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { AllToolCallsCompleteHandler, CancelledToolCall, CompletedToolCall, Config, Status as CoreStatus, EditorType, ExecutingToolCall, OutputUpdateHandler, ScheduledToolCall, ToolCall, ToolCallRequestInfo, ToolCallsUpdateHandler, ValidatingToolCall, WaitingToolCall } from '@office-ai/aioncli-core';
-import { CoreToolScheduler } from '@office-ai/aioncli-core';
+import type { AllToolCallsCompleteHandler, CancelledToolCall, CompletedToolCall, Config, Status as CoreStatus, EditorType, ExecutingToolCall, OutputUpdateHandler, ScheduledToolCall, ToolCall, ToolCallRequestInfo, ToolCallsUpdateHandler, ValidatingToolCall, WaitingToolCall } from '@margay/agent-core';
+import { CoreToolScheduler } from '@margay/agent-core';
 import { useCallback, useMemo, useState } from 'react';
 import type { HistoryItemToolGroup, HistoryItemWithoutId, IndividualToolCallDisplay } from './types';
 import { ToolCallStatus } from './types';
@@ -34,8 +34,8 @@ export type TrackedCancelledToolCall = CancelledToolCall & {
 
 export type TrackedToolCall = TrackedScheduledToolCall | TrackedValidatingToolCall | TrackedWaitingToolCall | TrackedExecutingToolCall | TrackedCompletedToolCall | TrackedCancelledToolCall;
 
-// aioncli-core v0.18.4: onEditorClose 回调已从 CoreToolSchedulerOptions 中移除
-// aioncli-core v0.18.4: onEditorClose callback was removed from CoreToolSchedulerOptions
+// @margay/agent-core v0.18.4: onEditorClose 回调已从 CoreToolSchedulerOptions 中移除
+// @margay/agent-core v0.18.4: onEditorClose callback was removed from CoreToolSchedulerOptions
 export function useReactToolScheduler(onComplete: (tools: CompletedToolCall[]) => Promise<void>, config: Config, setPendingHistoryItem: React.Dispatch<React.SetStateAction<HistoryItemWithoutId | null>>, getPreferredEditor: () => EditorType | undefined): [TrackedToolCall[], ScheduleFn, MarkToolsAsSubmittedFn] {
   const [toolCallsForDisplay, setToolCallsForDisplay] = useState<TrackedToolCall[]>([]);
 
@@ -95,8 +95,8 @@ export function useReactToolScheduler(onComplete: (tools: CompletedToolCall[]) =
         onAllToolCallsComplete: allToolCallsCompleteHandler,
         onToolCallsUpdate: toolCallsUpdateHandler,
         getPreferredEditor,
-        // onEditorClose 在 aioncli-core v0.18.4 中已移除
-        // onEditorClose was removed in aioncli-core v0.18.4
+        // onEditorClose 在 @margay/agent-core v0.18.4 中已移除
+        // onEditorClose was removed in @margay/agent-core v0.18.4
       }),
     [config, outputUpdateHandler, allToolCallsCompleteHandler, toolCallsUpdateHandler, getPreferredEditor]
   );

@@ -6,7 +6,7 @@
 
 /**
  * Tool confirmation outcome enum
- * This is a local copy to avoid importing the entire tools module from aioncli-core
+ * This is a local copy to avoid importing the entire tools module from @margay/agent-core
  * which contains Node.js dependencies (node:crypto) that cannot be bundled in the renderer process.
  */
 export enum ToolConfirmationOutcome {

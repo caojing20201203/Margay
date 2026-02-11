@@ -241,7 +241,7 @@ function hasScriptFiles(dir: string, depth = 0): boolean {
  * Inject absolute skill directory path into deployed SKILL.md for script-heavy skills.
  * Only modifies the DEPLOYED copy, never the source.
  * Recursively scans for *.py, *.js, *.sh files; if found, injects path hint AFTER
- * YAML frontmatter to preserve `^---` parsing required by aioncli-core skillLoader.
+ * YAML frontmatter to preserve `^---` parsing required by @margay/agent-core skillLoader.
  */
 function injectSkillPath(skillDir: string): void {
   try {
@@ -478,7 +478,7 @@ export function distributeForCodex(workspace: string, enabledSkills?: string[]):
 /**
  * Distribute Margay skills to Gemini CLI's discovery directory.
  * Rev 4: Gemini now uses workspace .gemini/skills/ for engine-native detection parity.
- * Note: aioncli-core still loads skills from its own path; this is for UI display only.
+ * Note: @margay/agent-core still loads skills from its own path; this is for UI display only.
  * Distribution is bootstrap-only (not per-send).
  */
 export function distributeForGemini(workspace: string, enabledSkills?: string[]): void {
@@ -493,12 +493,12 @@ export function distributeForGemini(workspace: string, enabledSkills?: string[])
 /**
  * Compute disabledSkills for Gemini's native SkillManager.
  *
- * Gemini's aioncli-core SkillManager scans the entire skillsDir and uses
+ * Gemini's @margay/agent-core SkillManager scans the entire skillsDir and uses
  * disabledSkills to filter. We convert Margay's enabledSkills (whitelist)
  * to disabledSkills (blacklist) for the native engine.
  *
  * @param enabledSkills - Margay's enabledSkills from preset/conversation
- * @returns disabledSkills array for aioncli-core, or undefined if no filtering needed
+ * @returns disabledSkills array for @margay/agent-core, or undefined if no filtering needed
  */
 /** Exported for testing. */
 export { shouldDistributeSkill, hasProvenanceMarker, readSkillMetadata, writeSkillMetadata, PROVENANCE_MARKER, SKILL_METADATA_FILENAME };

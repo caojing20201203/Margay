@@ -21,7 +21,7 @@ import type { IMcpProtocol, DetectedMcpServer, McpConnectionTestResult, McpSyncR
  *
  * Agent 类型说明：
  * - AcpBackend ('claude', 'qwen', 'iflow', 'gemini', 'codex'等): 支持的 ACP 后端
- * - 'margay': @office-ai/aioncli-core (Margay 本地管理的 Gemini 实现)
+ * - 'margay': @margay/agent-core (Margay 本地管理的 Gemini 实现)
  */
 export class McpService {
   private agents: Map<McpSource, IMcpProtocol>;
@@ -62,7 +62,7 @@ export class McpService {
       ['qwen', new QwenMcpAgent()],
       ['iflow', new IflowMcpAgent()],
       ['gemini', new GeminiMcpAgent()],
-      ['margay', new MargayMcpAgent()], // Margay 本地 @office-ai/aioncli-core
+      ['margay', new MargayMcpAgent()], // Margay 本地 @margay/agent-core
       ['codex', new CodexMcpAgent()],
     ]);
   }

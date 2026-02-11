@@ -5,20 +5,20 @@
  */
 
 import type { PartListUnion, PartUnion } from '@google/genai';
-import type { AnyToolInvocation, Config } from '@office-ai/aioncli-core';
-import { getErrorMessage, isNodeError, unescapePath } from '@office-ai/aioncli-core';
+import type { AnyToolInvocation, Config } from '@margay/agent-core';
+import { getErrorMessage, isNodeError, unescapePath } from '@margay/agent-core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { HistoryItem, IndividualToolCallDisplay } from './types';
 import { ToolCallStatus } from './types';
 
-// Truncation constants synced from aioncli-core/src/utils/fileUtils.ts
+// Truncation constants synced from @margay/agent-core/src/utils/fileUtils.ts
 const DEFAULT_MAX_LINES_TEXT_FILE = 2000;
 const MAX_LINE_LENGTH_TEXT_FILE = 2000;
 
 /**
  * Truncates file content to prevent token overflow.
- * Synced from aioncli-core/src/utils/fileUtils.ts
+ * Synced from @margay/agent-core/src/utils/fileUtils.ts
  */
 function truncateFileContent(content: string): { content: string; truncated: boolean } {
   const lines = content.split('\n');

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { CompletedToolCall, Config, GeminiClient, ServerGeminiStreamEvent, ToolCallRequestInfo } from '@office-ai/aioncli-core';
-import { executeToolCall, GeminiEventType as ServerGeminiEventType } from '@office-ai/aioncli-core';
+import type { CompletedToolCall, Config, GeminiClient, ServerGeminiStreamEvent, ToolCallRequestInfo } from '@margay/agent-core';
+import { executeToolCall, GeminiEventType as ServerGeminiEventType } from '@margay/agent-core';
 import { parseAndFormatApiError } from './cli/errorParsing';
 import { MIME_TO_EXT_MAP, DEFAULT_IMAGE_EXTENSION } from '@/common/constants';
 import * as fs from 'fs';
@@ -133,7 +133,7 @@ export const processGeminiStreamEvents = async (stream: AsyncIterable<ServerGemi
           }
           break;
         // InlineData: Handle inline image data from image generation models (e.g., gemini-3-pro-image)
-        // 处理来自图片生成模型的内联图片数据（使用字符串字面量以兼容旧版本 aioncli-core）
+        // 处理来自图片生成模型的内联图片数据（使用字符串字面量以兼容旧版本 @margay/agent-core）
         case 'inline_data' as ServerGeminiEventType:
           {
             const inlineData = (event as unknown as { value: { mimeType: string; data: string } }).value;
@@ -314,7 +314,7 @@ const normalizeToolParams = (toolName: string, args: Record<string, unknown>): R
     }
 
     // 新版 core 要求 list_directory 必填 dir_path，这里缺省时默认当前目录
-    // aioncli-core now requires dir_path; default to workspace root when missing
+    // @margay/agent-core now requires dir_path; default to workspace root when missing
     if (toolName === 'list_directory' && (typeof normalized.dir_path !== 'string' || normalized.dir_path.length === 0)) {
       normalized.dir_path = '.';
     }

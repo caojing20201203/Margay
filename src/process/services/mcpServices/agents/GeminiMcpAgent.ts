@@ -16,7 +16,7 @@ const execAsync = promisify(exec);
  * Google Gemini CLI MCP代理实现
  *
  * 使用 Google 官方的 Gemini CLI 的 mcp 子命令管理 MCP 服务器配置
- * 注意：这是管理真实的 Google Gemini CLI，不是 @office-ai/aioncli-core
+ * 注意：这是管理真实的 Google Gemini CLI，不是 @margay/agent-core
  */
 export class GeminiMcpAgent extends AbstractMcpAgent {
   constructor() {

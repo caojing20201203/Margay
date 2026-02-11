@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { TelemetryTarget, GeminiCLIExtension, FallbackIntent, SkillDefinition } from '@office-ai/aioncli-core';
-import { ApprovalMode, Config, DEFAULT_GEMINI_EMBEDDING_MODEL, DEFAULT_GEMINI_MODEL, DEFAULT_MEMORY_FILE_FILTERING_OPTIONS, FileDiscoveryService, getCurrentGeminiMdFilename, loadServerHierarchicalMemory, setGeminiMdFilename as setServerGeminiMdFilename, SimpleExtensionLoader, PREVIEW_GEMINI_MODEL_AUTO, loadSkillsFromDir } from '@office-ai/aioncli-core';
+import type { TelemetryTarget, GeminiCLIExtension, FallbackIntent, SkillDefinition } from '@margay/agent-core';
+import { ApprovalMode, Config, DEFAULT_GEMINI_EMBEDDING_MODEL, DEFAULT_GEMINI_MODEL, DEFAULT_MEMORY_FILE_FILTERING_OPTIONS, FileDiscoveryService, getCurrentGeminiMdFilename, loadServerHierarchicalMemory, setGeminiMdFilename as setServerGeminiMdFilename, SimpleExtensionLoader, PREVIEW_GEMINI_MODEL_AUTO, loadSkillsFromDir } from '@margay/agent-core';
 import process from 'node:process';
 import path from 'node:path';
 import type { Settings } from './settings';
@@ -72,11 +72,11 @@ export async function loadCliConfig({ workspace, settings, extensions, sessionId
     yolo: yoloMode,
   };
 
-  // Map 'auto' to the correct aioncli-core model alias
-  // aioncli-core 0.24 expects 'auto-gemini-3' or 'auto-gemini-2.5', not plain 'auto'
+  // Map 'auto' to the correct @margay/agent-core model alias
+  // @margay/agent-core 0.24 expects 'auto-gemini-3' or 'auto-gemini-2.5', not plain 'auto'
   // Since we enable previewFeatures, use PREVIEW_GEMINI_MODEL_AUTO for better model selection
-  // 将 'auto' 映射到正确的 aioncli-core 模型别名
-  // aioncli-core 0.24 需要 'auto-gemini-3' 或 'auto-gemini-2.5'，而不是纯 'auto'
+  // 将 'auto' 映射到正确的 @margay/agent-core 模型别名
+  // @margay/agent-core 0.24 需要 'auto-gemini-3' 或 'auto-gemini-2.5'，而不是纯 'auto'
   // 因为启用了 previewFeatures，使用 PREVIEW_GEMINI_MODEL_AUTO 以获得更好的模型选择
   const resolvedModel = model === 'auto' ? PREVIEW_GEMINI_MODEL_AUTO : model;
 
@@ -151,8 +151,8 @@ export async function loadCliConfig({ workspace, settings, extensions, sessionId
     ...settings.fileFiltering,
   };
 
-  // 直接使用 aioncli-core 的 loadServerHierarchicalMemory，传入 ExtensionLoader
-  // Directly use aioncli-core's loadServerHierarchicalMemory with ExtensionLoader
+  // 直接使用 @margay/agent-core 的 loadServerHierarchicalMemory，传入 ExtensionLoader
+  // Directly use @margay/agent-core's loadServerHierarchicalMemory with ExtensionLoader
   const extensionLoader = new SimpleExtensionLoader(allExtensions);
   const folderTrust = true; // 默认信任工作区 / Default to trusting the workspace
   const { memoryContent, fileCount } = await loadServerHierarchicalMemory(workspace, [], debugMode, fileService, extensionLoader, folderTrust, memoryImportFormat, fileFiltering, settings.memoryDiscoveryMaxDirs);
@@ -188,7 +188,7 @@ export async function loadCliConfig({ workspace, settings, extensions, sessionId
         Object.entries(mcpServersConfig).filter(([key, server]) => {
           const isAllowed = allowedNames.has(key);
           if (!isAllowed) {
-            // aioncli-core v0.18.4: 使用 server.extension?.name 替代 server.extensionName / use server.extension?.name instead of server.extensionName
+            // @margay/agent-core v0.18.4: 使用 server.extension?.name 替代 server.extensionName / use server.extension?.name instead of server.extensionName
             blockedMcpServers.push({
               name: key,
               extensionName: server.extension?.name || '',
@@ -201,7 +201,7 @@ export async function loadCliConfig({ workspace, settings, extensions, sessionId
       blockedMcpServers.push(
         ...Object.entries(mcpServersConfig).map(([key, server]) => ({
           name: key,
-          // aioncli-core v0.18.4: 使用 server.extension?.name 替代 server.extensionName / use server.extension?.name instead of server.extensionName
+          // @margay/agent-core v0.18.4: 使用 server.extension?.name 替代 server.extensionName / use server.extension?.name instead of server.extensionName
           extensionName: server.extension?.name || '',
         }))
       );
@@ -220,7 +220,7 @@ export async function loadCliConfig({ workspace, settings, extensions, sessionId
     includeDirectories: argv.includeDirectories,
     debugMode,
     question: argv.promptInteractive || argv.prompt || '',
-    // fullContext 参数在 aioncli-core v0.18.4 中已移除 / parameter was removed in aioncli-core v0.18.4
+    // fullContext 参数在 @margay/agent-core v0.18.4 中已移除 / parameter was removed in @margay/agent-core v0.18.4
     coreTools: settings.coreTools || undefined,
     excludeTools,
     toolDiscoveryCommand: settings.toolDiscoveryCommand,
@@ -271,20 +271,20 @@ export async function loadCliConfig({ workspace, settings, extensions, sessionId
     skillsSupport: !!skillsDir,
   });
 
-  // FallbackModelHandler 返回类型在 aioncli-core v0.18.4 中使用 FallbackIntent
-  // FallbackModelHandler return type uses FallbackIntent in aioncli-core v0.18.4
+  // FallbackModelHandler 返回类型在 @margay/agent-core v0.18.4 中使用 FallbackIntent
+  // FallbackModelHandler return type uses FallbackIntent in @margay/agent-core v0.18.4
   // 可用值 / Available values: 'retry_always' | 'retry_once' | 'stop' | 'retry_later' | 'upgrade' | null
   //
   // 工作流程 / Workflow:
   // 1. handler 调用 apiKeyManager.rotateKey() 更新 process.env 中的 API Key
   //    handler calls apiKeyManager.rotateKey() to update API Key in process.env
-  // 2. aioncli-core 的 tryRotateApiKey 检测到 env 变化后会调用 config.refreshAuth()
-  //    aioncli-core's tryRotateApiKey detects env change and calls config.refreshAuth()
+  // 2. @margay/agent-core 的 tryRotateApiKey 检测到 env 变化后会调用 config.refreshAuth()
+  //    @margay/agent-core's tryRotateApiKey detects env change and calls config.refreshAuth()
   // 3. 返回 'retry_once' 表示本次重试，'stop' 表示停止
   //    Return 'retry_once' for one-time retry, 'stop' to stop retrying
   //
-  // 重要：返回 'retry_once' 会导致 aioncli-core 重置重试计数并继续重试
-  // IMPORTANT: returning 'retry_once' causes aioncli-core to reset retry count and continue
+  // 重要：返回 'retry_once' 会导致 @margay/agent-core 重置重试计数并继续重试
+  // IMPORTANT: returning 'retry_once' causes @margay/agent-core to reset retry count and continue
   // 对于 RATE_LIMIT 错误，如果没有其他 API key 可用，应该返回 null 让内置重试机制处理
   // For RATE_LIMIT errors, if no other API keys available, return null to let built-in retry handle it
   const fallbackModelHandler = async (_currentModel: string, _fallbackModel: string, _error?: unknown): Promise<FallbackIntent | null> => {
