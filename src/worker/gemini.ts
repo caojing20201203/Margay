@@ -14,11 +14,13 @@ import { forkTask } from './utils';
 // Set CLI_VERSION so @margay/agent-core's getVersion() returns the embedded
 // package version rather than relying on readPackageUp (which finds the wrong
 // package.json when running inside a webpack bundle).
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-  process.env.CLI_VERSION = require('@margay/agent-core/package.json').version;
-} catch {
-  // noop — getVersion() falls back to readPackageUp
+if (!process.env.CLI_VERSION) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+    process.env.CLI_VERSION = require('@margay/agent-core/package.json').version;
+  } catch {
+    // noop — getVersion() falls back to readPackageUp
+  }
 }
 
 export default forkTask(({ data }, pipe) => {
