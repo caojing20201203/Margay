@@ -8,8 +8,19 @@
 // 1. 主进程管理子进程 -》 进程管理器，需要维护当前所有子进程，并负责子进程的通信操作
 // 2. 子进程管理，需要根据不同的agent处理不同的agent任务，同时所有子进程具备相同的通信机制
 import { GeminiAgent } from '@/agent/gemini';
-import { ShellExecutionService } from '@margay/agent-core';
+import { ShellExecutionService } from '@/agent/gemini/core-facade';
 import { forkTask } from './utils';
+
+// Set CLI_VERSION so @margay/agent-core's getVersion() returns the embedded
+// package version rather than relying on readPackageUp (which finds the wrong
+// package.json when running inside a webpack bundle).
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+  process.env.CLI_VERSION = require('@margay/agent-core/package.json').version;
+} catch {
+  // noop — getVersion() falls back to readPackageUp
+}
+
 export default forkTask(({ data }, pipe) => {
   pipe.log('gemini.init', data);
   console.log(`[GeminiWorker] presetRules length: ${data.presetRules?.length || 0}`);
