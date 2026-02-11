@@ -14,10 +14,12 @@ jobs:
   code-quality:
     name: Code Quality
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -76,6 +78,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -513,6 +517,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
+          submodules: true
           token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Create and push tag
@@ -606,6 +611,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Get version for release
         id: version
