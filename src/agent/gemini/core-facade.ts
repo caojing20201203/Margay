@@ -22,7 +22,7 @@ export * from '@margay/agent-core';
 // ---------------------------------------------------------------------------
 
 import { CoreToolScheduler } from '@margay/agent-core';
-import type { ToolCallRequestInfo, Config, type CompletedToolCall } from '@margay/agent-core';
+import type { ToolCallRequestInfo, Config, CompletedToolCall } from '@margay/agent-core';
 
 /**
  * Executes a single tool call non-interactively using CoreToolScheduler.
