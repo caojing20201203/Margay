@@ -237,6 +237,29 @@ export const ASSISTANT_PRESETS: AssistantPreset[] = [
     },
   },
   {
+    id: 'social-media-monitor',
+    avatar: '📡',
+    presetAgentType: 'gemini',
+    resourceDir: 'assistant/social-media-monitor',
+    ruleFiles: {
+      'en-US': 'social-media-monitor.md',
+      'zh-CN': 'social-media-monitor.zh-CN.md',
+    },
+    defaultEnabledSkills: ['social-monitor', 'cron'],
+    nameI18n: {
+      'en-US': 'Social Media Monitor',
+      'zh-CN': '社交媒体监控',
+    },
+    descriptionI18n: {
+      'en-US': 'Track engagement on your posts across X, HN, and Reddit. Auto-reply, generate digests, schedule monitoring.',
+      'zh-CN': '跟踪你在 X、HN、Reddit 上的帖子反馈，自动回帖、生成摘要、定时监控。',
+    },
+    promptsI18n: {
+      'en-US': ['Scan my recent X posts for replies', 'Check comments on my HN submission', 'Generate a weekly social media digest', 'Set up daily monitoring at 9 AM'],
+      'zh-CN': ['扫描我最近的推文回复', '查看我 HN 提交的评论', '生成本周社交媒体摘要', '设置每天早上 9 点自动监控'],
+    },
+  },
+  {
     id: 'beautiful-mermaid',
     avatar: '📈',
     presetAgentType: 'gemini',
