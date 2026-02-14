@@ -323,7 +323,7 @@ export function initConversationBridge(): void {
         root: workspace,
         fileService,
         abortController: buildLastAbortController(),
-        maxDepth: 10, // 支持更深的目录结构 / Support deeper directory structures
+        maxDepth: search ? 8 : 3, // 搜索时深度扫描，浏览时浅层加载 / Deep scan for search, shallow for browsing
         search: {
           text: search,
           onProcess(result) {

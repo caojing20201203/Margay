@@ -96,6 +96,12 @@ export const generateHashWithFullName = (fullName: string): string => {
 };
 
 // 递归读取目录内容，返回树状结构
+// Recursively read directory contents and return tree structure
+//
+// Performance notes:
+// - Uses fs.readdir({ withFileTypes: true }) to avoid per-file fs.stat() calls
+// - maxEntries caps total entries scanned to prevent slowdowns on large dirs (e.g. ~/Downloads)
+// - Hidden files/dirs (starting with '.') are skipped to reduce noise
 export async function readDirectoryRecursive(
   dirPath: string,
   options?: {
@@ -103,6 +109,8 @@ export async function readDirectoryRecursive(
     abortController?: AbortController;
     fileService?: { shouldIgnoreFile(path: string): boolean };
     maxDepth?: number;
+    maxEntries?: number;
+    _entryCount?: { value: number };
     search?: {
       text: string;
       onProcess?(result: { file: number; dir: number; match?: IDirOrFile }): void;
@@ -110,13 +118,14 @@ export async function readDirectoryRecursive(
     };
   }
 ): Promise<IDirOrFile> {
-  const { root = dirPath, maxDepth = 1, fileService, search, abortController } = options || {};
+  const { root = dirPath, maxDepth = 1, maxEntries = 5000, fileService, search, abortController } = options || {};
+  const entryCount = options?._entryCount ?? { value: 0 };
   const { text: searchText, onProcess: onSearchProcess = () => {}, process = { file: 0, dir: 1 } } = search || {};
 
   const matchSearch = searchText ? (fullPath: string) => fullPath.includes(searchText) : (_: string) => false;
 
   const checkStatus = () => {
-    if (abortController.signal.aborted) throw new Error('readDirectoryRecursive aborted!');
+    if (abortController?.signal.aborted) throw new Error('readDirectoryRecursive aborted!');
   };
 
   const stats = await fs.stat(dirPath);
@@ -138,21 +147,29 @@ export async function readDirectoryRecursive(
   });
   if (maxDepth === 0 || searchResult) return result;
   checkStatus();
-  const items = await fs.readdir(dirPath);
+  // 使用 withFileTypes 避免逐个 stat 调用 / Use withFileTypes to avoid per-file stat calls
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
   checkStatus();
 
-  for (const item of items) {
+  for (const entry of entries) {
     checkStatus();
+    // 跳过总数上限 / Stop when entry limit is reached
+    if (entryCount.value >= maxEntries) break;
+    const item = entry.name;
     if (item === 'node_modules') continue;
+    // 跳过隐藏文件/目录（以 . 开头），减少噪音 / Skip hidden files/dirs to reduce noise
+    if (item.startsWith('.')) continue;
     const itemPath = path.join(dirPath, item);
     if (fileService && fileService.shouldIgnoreFile(itemPath)) continue;
+    entryCount.value += 1;
 
-    const itemStats = await fs.stat(itemPath);
-    if (itemStats.isDirectory()) {
+    if (entry.isDirectory()) {
       process.dir += 1;
       const child = await readDirectoryRecursive(itemPath, {
         ...options,
         maxDepth: searchText ? maxDepth : maxDepth - 1,
+        maxEntries,
+        _entryCount: entryCount,
         root,
         search: {
           ...search,
@@ -170,7 +187,7 @@ export async function readDirectoryRecursive(
       if (child && !searchText) {
         result.children.push(child);
       }
-    } else {
+    } else if (entry.isFile()) {
       const children = {
         name: item,
         relativePath: path.relative(root, itemPath),
