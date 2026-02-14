@@ -38,7 +38,7 @@ import { buildDisplayMessage } from '@/renderer/utils/messageFiles';
 import { hasSpecificModelCapability } from '@/renderer/utils/modelCapabilities';
 import { updateWorkspaceTime } from '@/renderer/utils/workspaceHistory';
 import { isAcpRoutedPresetType, type AcpBackend, type AcpBackendConfig, type PresetAgentType } from '@/types/acpTypes';
-import { Button, ConfigProvider, Dropdown, Input, Menu, Tooltip } from '@arco-design/web-react';
+import { Button, ConfigProvider, Dropdown, Input, Menu, Message, Tooltip } from '@arco-design/web-react';
 import { IconClose } from '@arco-design/web-react/icon';
 import { ArrowUp, Down, FolderOpen, FolderPlus, Plus, Robot, UploadOne } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -724,6 +724,24 @@ const Guid: React.FC = () => {
     [customAgents]
   );
 
+  // Agent Auto-Switch: 当 preset 配置的 agent 不可用时自动 fallback
+  // Auto fallback when preset's preferred agent type is unavailable
+  const agentFallback = useMemo(() => {
+    if (!isPresetAgent || !selectedAgentInfo) return { isFallback: false as const };
+    if (!availableAgents) return { isFallback: false as const }; // Not yet loaded, suppress flash
+    const targetType = resolvePresetAgentType(selectedAgentInfo);
+    if (targetType === 'gemini') return { isFallback: false as const }; // Gemini embedded, always available
+    const isAvailable = availableAgents?.some((a) => a.backend === targetType);
+    if (isAvailable) return { isFallback: false as const };
+    const FALLBACK_ORDER: PresetAgentType[] = ['gemini', 'claude', 'codex', 'opencode'];
+    const fallback = FALLBACK_ORDER.find((type) => type === 'gemini' || availableAgents?.some((a) => a.backend === type)) || 'gemini';
+    return { isFallback: true as const, originalType: targetType, effectiveType: fallback };
+  }, [isPresetAgent, selectedAgentInfo, availableAgents, resolvePresetAgentType]);
+
+  // Effective agent type for UI visibility checks (accounts for fallback)
+  const effectivePresetType = agentFallback.isFallback ? agentFallback.effectiveType : resolvePresetAgentType(selectedAgentInfo);
+  const isEffectivelyGemini = selectedAgent === 'gemini' || (isPresetAgent && effectivePresetType === 'gemini');
+
   // 解析助手启用的 skills 列表 / Resolve enabled skills for the assistant
   const resolveEnabledSkills = useCallback(
     (agentInfo: { backend: AcpBackend; customAgentId?: string } | undefined): string[] | undefined => {
@@ -772,7 +790,8 @@ const Guid: React.FC = () => {
 
     const agentInfo = selectedAgentInfo;
     const isPreset = isPresetAgent;
-    const presetAgentType = resolvePresetAgentType(agentInfo);
+    // Use effective type after auto-switch fallback
+    const presetAgentType = agentFallback.isFallback ? agentFallback.effectiveType : resolvePresetAgentType(agentInfo);
 
     // 加载 rules（skills 已迁移到 SkillManager）/ Load rules (skills migrated to SkillManager)
     const { rules: presetRules } = await resolvePresetRulesAndSkills(agentInfo);
@@ -835,7 +854,7 @@ const Guid: React.FC = () => {
       } catch (error: unknown) {
         console.error('Failed to create or send Gemini message:', error);
         const errorMessage = error instanceof Error ? error.message : String(error);
-        alert(`Failed to create Gemini conversation: ${errorMessage}`);
+        Message.error({ content: `Failed to create conversation: ${errorMessage}`, duration: 5000 });
         throw error; // Re-throw to prevent input clearing
       }
       return;
@@ -865,7 +884,7 @@ const Guid: React.FC = () => {
         });
 
         if (!conversation || !conversation.id) {
-          alert('Failed to create Codex conversation. Please ensure the Codex CLI is installed and accessible in PATH.');
+          Message.error({ content: 'Failed to create Codex conversation. Please ensure the Codex CLI is installed.', duration: 5000 });
           return;
         }
 
@@ -891,7 +910,7 @@ const Guid: React.FC = () => {
         await navigate(`/conversation/${conversation.id}`);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        alert(`Failed to create Codex conversation: ${errorMessage}`);
+        Message.error({ content: `Failed to create Codex conversation: ${errorMessage}`, duration: 5000 });
         throw error;
       }
       return;
@@ -903,7 +922,7 @@ const Guid: React.FC = () => {
       const acpBackend = isPreset && isAcpRoutedPresetType(presetAgentType) ? presetAgentType : selectedAgent;
 
       if (!acpAgentInfo && !isPreset) {
-        alert(`${selectedAgent} CLI not found or not configured. Please ensure it's installed and accessible.`);
+        Message.warning({ content: `${selectedAgent} CLI not found. Please install it or select another agent.`, duration: 5000 });
         return;
       }
 
@@ -932,7 +951,7 @@ const Guid: React.FC = () => {
         });
 
         if (!conversation || !conversation.id) {
-          alert('Failed to create ACP conversation. Please check your ACP configuration and ensure the CLI is installed.');
+          Message.error({ content: 'Failed to create ACP conversation. Please check your configuration.', duration: 5000 });
           return;
         }
 
@@ -966,12 +985,10 @@ const Guid: React.FC = () => {
         const errorMessage = error instanceof Error ? error.message : String(error);
         if (errorMessage.includes('[ACP-AUTH-')) {
           console.error(t('acp.auth.console_error'), errorMessage);
-          const confirmed = window.confirm(t('acp.auth.failed_confirm', { backend: selectedAgent, error: errorMessage }));
-          if (confirmed) {
-            void navigate('/settings/model');
-          }
+          Message.warning({ content: t('acp.auth.failed_confirm', { backend: selectedAgent, error: errorMessage }), duration: 5000 });
+          void navigate('/settings/model');
         } else {
-          alert(`Failed to create ${selectedAgent} ACP conversation. Please check your ACP configuration and ensure the CLI is installed.`);
+          Message.error({ content: `Failed to create ${selectedAgent} conversation: ${errorMessage}`, duration: 5000 });
         }
         throw error; // Re-throw to prevent input clearing
       }
@@ -1215,6 +1232,23 @@ const Guid: React.FC = () => {
             </div>
           )}
 
+          {/* Agent Auto-Switch fallback notice */}
+          {agentFallback.isFallback && (
+            <div className='w-full flex justify-center mb-8px animate-fade-in'>
+              <div
+                className='inline-flex items-center gap-6px px-12px py-6px rd-16px text-13px'
+                style={{
+                  backgroundColor: 'rgba(var(--warning-6), 0.1)',
+                  color: 'rgb(var(--warning-6))',
+                  border: '1px solid rgba(var(--warning-6), 0.3)',
+                }}
+              >
+                <span>⚠</span>
+                <span>{t('guid.agentFallbackNotice', { original: agentFallback.originalType, fallback: agentFallback.effectiveType })}</span>
+              </div>
+            </div>
+          )}
+
           <div
             className={`${styles.guidInputCard} relative p-16px border-3 b bg-dialog-fill-0 b-solid rd-20px flex flex-col ${mentionOpen ? 'overflow-visible' : 'overflow-hidden'} transition-all duration-200 ${isFileDragging ? 'border-dashed' : ''}`}
             style={{
@@ -1349,7 +1383,7 @@ const Guid: React.FC = () => {
                   </span>
                 </Dropdown>
 
-                {(selectedAgent === 'gemini' || (isPresetAgent && resolvePresetAgentType(selectedAgentInfo) === 'gemini')) && (
+                {isEffectivelyGemini && (
                   <Dropdown
                     trigger='hover'
                     droplist={
@@ -1494,7 +1528,7 @@ const Guid: React.FC = () => {
                   shape='circle'
                   type='primary'
                   loading={loading}
-                  disabled={!input.trim() || ((!selectedAgent || selectedAgent === 'gemini' || (isPresetAgent && resolvePresetAgentType(selectedAgentInfo) === 'gemini')) && !currentModel)}
+                  disabled={!input.trim() || (isEffectivelyGemini && !currentModel)}
                   icon={<ArrowUp theme='outline' size='14' fill='white' strokeWidth={2} />}
                   onClick={() => {
                     handleSend().catch((error) => {
@@ -1524,12 +1558,12 @@ const Guid: React.FC = () => {
                 <div className='flex items-center gap-6px mb-2px'>
                   <FolderPlus className='flex-shrink-0' theme='outline' size='14' fill={iconColors.secondary} style={{ lineHeight: 0 }} />
                   <span className='text-12px'>{t('conversation.welcome.additionalDirs')}</span>
-                  {(selectedAgent === 'gemini' || (isPresetAgent && resolvePresetAgentType(selectedAgentInfo) === 'gemini')) && (
+                  {isEffectivelyGemini && (
                     <Tooltip content={t('conversation.welcome.additionalDirsGeminiUnsupported')} position='top'>
                       <span className='text-11px text-[rgb(var(--warning-6))]'>⚠</span>
                     </Tooltip>
                   )}
-                  {(selectedAgent === 'codex' || (isPresetAgent && resolvePresetAgentType(selectedAgentInfo) === 'codex')) && (
+                  {(selectedAgent === 'codex' || (isPresetAgent && effectivePresetType === 'codex')) && (
                     <Tooltip content={t('conversation.welcome.codexAdditionalDirsLimited')} position='top'>
                       <span className='text-11px text-[rgb(var(--warning-6))]'>⚠</span>
                     </Tooltip>

@@ -355,6 +355,9 @@
       "preset_registered": "Ajan hazır ayarı başarıyla kaydedildi!"
     }
   },
+  "guid": {
+    "agentFallbackNotice": "{{original}} kullanılamıyor, {{fallback}} kullanılıyor"
+  },
   "settings": {
     "title": "Ayarlar",
     "authMethod": "Kimlik Doğrulama",

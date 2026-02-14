@@ -449,6 +449,9 @@
       "contextUsed": "コンテキスト使用量"
     }
   },
+  "guid": {
+    "agentFallbackNotice": "{{original}} は利用できません。{{fallback}} に切り替えました"
+  },
   "settings": {
     "about": "情報",
     "assistants": "アシスタント",

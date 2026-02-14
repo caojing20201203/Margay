@@ -346,6 +346,9 @@
       "preset_registered": "Agent preset registered successfully!"
     }
   },
+  "guid": {
+    "agentFallbackNotice": "{{original}} is unavailable, using {{fallback}} instead"
+  },
   "settings": {
     "title": "Settings",
     "authMethod": "Authentication",

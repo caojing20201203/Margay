@@ -343,6 +343,9 @@
       "preset_registered": "已保存为全局预设"
     }
   },
+  "guid": {
+    "agentFallbackNotice": "{{original}} 不可用，已自动切换到 {{fallback}}"
+  },
   "settings": {
     "title": "设置",
     "authMethod": "认证",

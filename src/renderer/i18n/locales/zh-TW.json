@@ -420,6 +420,9 @@
       "contextUsed": "上下文已使用"
     }
   },
+  "guid": {
+    "agentFallbackNotice": "{{original}} 不可用，已自動切換到 {{fallback}}"
+  },
   "settings": {
     "about": "關於",
     "assistants": "助理",

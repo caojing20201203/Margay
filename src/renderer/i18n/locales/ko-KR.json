@@ -346,6 +346,9 @@
       "preset_registered": "에이전트 프리셋이 성공적으로 등록되었습니다!"
     }
   },
+  "guid": {
+    "agentFallbackNotice": "{{original}}을(를) 사용할 수 없어 {{fallback}}으로 전환했습니다"
+  },
   "settings": {
     "title": "설정",
     "authMethod": "인증",
