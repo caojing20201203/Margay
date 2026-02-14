@@ -282,4 +282,27 @@ export const ASSISTANT_PRESETS: AssistantPreset[] = [
       'zh-CN': ['画一个用户登录流程图', '创建一个 API 时序图', '画一个 TCP 状态图'],
     },
   },
+  {
+    id: 'my-love',
+    avatar: '🐱',
+    presetAgentType: 'gemini',
+    resourceDir: 'assistant/my-love',
+    ruleFiles: {
+      'en-US': 'my-love.md',
+      'zh-CN': 'my-love.zh-CN.md',
+    },
+    defaultEnabledSkills: ['cron'],
+    nameI18n: {
+      'en-US': 'My Love',
+      'zh-CN': '喵爱',
+    },
+    descriptionI18n: {
+      'en-US': "A loving cat companion for Valentine's Day. Morning coffee reminders, afternoon call reminders, love letters, and endless affection.",
+      'zh-CN': '情人节专属猫咪伴侣。晨间咖啡提醒、午后电话提醒、情书生成和无尽的温柔。',
+    },
+    promptsI18n: {
+      'en-US': ['Set up morning and afternoon reminders', 'Write a love letter', 'Give me a fortune cookie', 'Compliment me'],
+      'zh-CN': ['设置早晚提醒', '写一封情书', '给我一个幸运饼干', '夸夸我'],
+    },
+  },
 ];
