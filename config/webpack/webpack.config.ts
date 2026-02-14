@@ -62,5 +62,9 @@ export const mainConfig: Configuration = {
     'ajv': 'commonjs ajv',
     'ajv/dist/2020.js': 'commonjs ajv/dist/2020.js',
     'ajv-formats': 'commonjs ajv-formats',
+    // discord.js optional peer dependencies — not installed, gracefully skipped at runtime
+    'zlib-sync': 'commonjs zlib-sync',
+    'bufferutil': 'commonjs bufferutil',
+    'utf-8-validate': 'commonjs utf-8-validate',
   },
 };
