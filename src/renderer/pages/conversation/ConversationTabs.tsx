@@ -132,10 +132,24 @@ const ConversationTabs: React.FC = () => {
         const convType = resolveConversationType(agent.backend);
 
         // Only Gemini requires a configured model; ACP/Codex agents ignore it
-        const model = await resolveDefaultModel();
+        let model = await resolveDefaultModel();
         if (convType === 'gemini' && !model) {
-          Message.error(t('settings.noConfiguredModels'));
-          return;
+          // Issue 4 fix: try Google Auth fallback before showing error
+          const authStatus = await ipcBridge.googleAuth.status.invoke({});
+          if (authStatus.success) {
+            model = {
+              id: 'google-auth-gemini',
+              name: 'Gemini Google Auth',
+              platform: 'gemini-with-google-auth',
+              baseUrl: '',
+              apiKey: '',
+              model: ['auto'],
+              useModel: 'auto',
+            } as TProviderWithModel;
+          } else {
+            Message.error(t('settings.noConfiguredModels'));
+            return;
+          }
         }
         const conversation = await ipcBridge.conversation.create.invoke({
           type: convType,

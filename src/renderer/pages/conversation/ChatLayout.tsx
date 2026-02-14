@@ -1,5 +1,6 @@
 import { ipcBridge } from '@/common';
 import { ConfigStorage } from '@/common/storage';
+import type { TProviderWithModel } from '@/common/storage';
 import { STORAGE_KEYS } from '@/common/storageKeys';
 import FlexFullContainer from '@/renderer/components/FlexFullContainer';
 import { useLayoutContext } from '@/renderer/context/LayoutContext';
@@ -7,9 +8,10 @@ import { useResizableSplit } from '@/renderer/hooks/useResizableSplit';
 import ConversationTabs from '@/renderer/pages/conversation/ConversationTabs';
 import { useConversationTabs } from '@/renderer/pages/conversation/context/ConversationTabsContext';
 import { PreviewPanel, usePreviewContext } from '@/renderer/pages/conversation/preview';
-import { Dropdown, Layout as ArcoLayout, Menu } from '@arco-design/web-react';
+import { Dropdown, Layout as ArcoLayout, Menu, Message } from '@arco-design/web-react';
 import { Down, ExpandLeft, ExpandRight, Robot } from '@icon-park/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 
@@ -44,6 +46,9 @@ const AGENT_LOGO_MAP: Partial<Record<AcpBackend, string>> = {
 };
 
 import { iconColors } from '@/renderer/theme/colors';
+import { emitter } from '@/renderer/utils/emitter';
+import { resolveDefaultModel } from '@/renderer/utils/modelResolver';
+import { updateWorkspaceTime } from '@/renderer/utils/workspaceHistory';
 import { WORKSPACE_HAS_FILES_EVENT, WORKSPACE_TOGGLE_EVENT, dispatchWorkspaceStateEvent, dispatchWorkspaceToggleEvent, type WorkspaceHasFilesDetail } from '@/renderer/utils/workspaceEvents';
 import { ACP_BACKENDS_ALL } from '@/types/acpTypes';
 import classNames from 'classnames';
@@ -144,8 +149,9 @@ const ChatLayout: React.FC<{
   const displayName = agentName || (backend === 'custom' && customAgents?.[0]?.name) || ACP_BACKENDS_ALL[backend as keyof typeof ACP_BACKENDS_ALL]?.name || backend;
 
   // 获取 tabs 状态，有 tabs 时隐藏会话标题
-  const { openTabs } = useConversationTabs();
+  const { openTabs, openTab } = useConversationTabs();
   const hasTabs = openTabs.length > 0;
+  const { t } = useTranslation();
 
   // B1: Agent badge dropdown — fetch available agents and navigate to new session
   const navigate = useNavigate();
@@ -155,15 +161,79 @@ const ChatLayout: React.FC<{
   });
   const currentBackendKey = backend || 'gemini';
 
+  // Issue 5 fix: Create inline conversation instead of navigating to home page
+  const handleSwitchAgent = useCallback(
+    async (agentKey: string) => {
+      if (agentKey === currentBackendKey) return;
+      if (!workspace) {
+        void navigate('/guid', { state: { agent: agentKey } });
+        return;
+      }
+      const agent = availableAgents?.find((a) => a.backend === agentKey);
+      if (!agent) return;
+
+      try {
+        const convType = agentKey === 'gemini' ? 'gemini' : agentKey === 'codex' ? 'codex' : 'acp';
+
+        let model = await resolveDefaultModel();
+        if (convType === 'gemini' && !model) {
+          const authStatus = await ipcBridge.googleAuth.status.invoke({});
+          if (authStatus.success) {
+            model = {
+              id: 'google-auth-gemini',
+              name: 'Gemini Google Auth',
+              platform: 'gemini-with-google-auth',
+              baseUrl: '',
+              apiKey: '',
+              model: ['auto'],
+              useModel: 'auto',
+            } as TProviderWithModel;
+          } else {
+            Message.error(t('settings.noConfiguredModels'));
+            return;
+          }
+        }
+
+        const conversation = await ipcBridge.conversation.create.invoke({
+          type: convType,
+          name: t('conversation.welcome.newConversation'),
+          model: model ?? ({ useModel: '' } as TProviderWithModel),
+          extra: {
+            workspace,
+            customWorkspace: true,
+            ...(convType === 'acp' && {
+              backend: agent.backend,
+              cliPath: agent.cliPath,
+              agentName: agent.name,
+              customAgentId: agent.customAgentId,
+            }),
+          },
+        });
+
+        if (!conversation?.id) {
+          Message.error('Failed to create conversation.');
+          return;
+        }
+
+        updateWorkspaceTime(workspace);
+        openTab(conversation);
+        emitter.emit('chat.history.refresh');
+        void navigate(`/conversation/${conversation.id}`);
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        Message.error(msg);
+      }
+    },
+    [availableAgents, currentBackendKey, navigate, openTab, t, workspace]
+  );
+
   const agentDropdownMenu = useMemo(() => {
     if (!availableAgents || availableAgents.length <= 1) return null;
     return (
       <Menu
         selectedKeys={[currentBackendKey]}
         onClickMenuItem={(key) => {
-          if (key === currentBackendKey) return; // already on this agent
-          // Navigate to guid page directly (not '/' which redirects and drops state)
-          void navigate('/guid', { state: { workspace, agent: key } });
+          void handleSwitchAgent(key);
         }}
         className='min-w-160px'
       >
@@ -182,7 +252,7 @@ const ChatLayout: React.FC<{
           })}
       </Menu>
     );
-  }, [availableAgents, currentBackendKey, navigate, workspace]);
+  }, [availableAgents, currentBackendKey, handleSwitchAgent]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
